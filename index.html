@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="皮肤诱因日记">
 <meta name="theme-color" content="#FAF1E8">
 <title>皮肤诱因日记</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -351,10 +353,31 @@ const STYLE_BLOCK = `
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 input[type="range"] { -webkit-appearance: none; appearance: none; }
-input[type="text"], input[type="number"], textarea, input[type="time"] {
+body {
   font-family: "ChillHuoSong_F", -apple-system, sans-serif;
+  font-weight: 400;
+}
+input[type="text"], input[type="number"], textarea, input[type="time"], select {
+  font-family: "ChillHuoSong_F", -apple-system, sans-serif;
+  font-weight: 400;
 }
 button { font-family: inherit; }
+.f-hei {
+  font-family: "寒蝉活黑体_復 Bold", -apple-system, sans-serif;
+}
+.f-hei-narrow {
+  font-family: "寒蝉活黑体_復 Bold", -apple-system, sans-serif;
+  transform: scaleX(0.85);
+  transform-origin: center;
+  display: inline-block;
+}
+.f-song-bold-narrow {
+  font-family: "ChillHuoSong_F", -apple-system, sans-serif;
+  font-weight: 800;
+  transform: scaleX(0.92);
+  transform-origin: center;
+  display: inline-block;
+}
 .fade-in { animation: fadeIn 0.2s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 `;
@@ -514,7 +537,7 @@ function Card({ children, className = '', emphasis = false, onClick, style = {},
     <Tag
       onClick={onClick}
       style={baseStyle}
-      className={`block w-full text-left rounded-2xl border border-gray-200 shadow-sm ${padding} ${onClick ? 'transition-all duration-200 hover:shadow-md active:scale-[0.99]' : ''} ${className}`}
+      className={`block w-full text-left rounded-2xl ${padding} ${onClick ? 'transition-all duration-200 active:scale-[0.99]' : ''} ${className}`}
     >
       {children}
     </Tag>
@@ -534,7 +557,7 @@ function PrimaryButton({ children, onClick, disabled, icon: Icon, fullWidth, typ
       className={`rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 inline-flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''}`}
     >
       {Icon && <Icon className="w-4 h-4" />}
-      <span>{children}</span>
+      <span className="f-hei">{children}</span>
     </button>
   );
 }
@@ -546,10 +569,10 @@ function OutlineButton({ children, onClick, disabled, icon: Icon, fullWidth, typ
       onClick={onClick}
       disabled={disabled}
       style={{ color: COLORS.primary }}
-      className={`rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 border border-gray-200 bg-white shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''}`}
+      className={`rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 bg-white inline-flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''}`}
     >
       {Icon && <Icon className="w-4 h-4" />}
-      <span>{children}</span>
+      <span className="f-hei">{children}</span>
     </button>
   );
 }
@@ -567,7 +590,7 @@ function AccentButton({ children, onClick, disabled, icon: Icon, fullWidth, type
       className={`rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 inline-flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''}`}
     >
       {Icon && <Icon className="w-4 h-4" />}
-      <span>{children}</span>
+      <span className="f-hei">{children}</span>
     </button>
   );
 }
@@ -584,7 +607,7 @@ function TextInput({ value, onChange, placeholder, type = 'text', className = ''
         backgroundColor: COLORS.subtle,
         color: COLORS.primary,
       }}
-      className={`w-full rounded-lg px-4 py-3 text-sm outline-none border border-transparent transition-all focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-purple-100 ${className}`}
+      className={`w-full rounded-lg px-4 py-3 text-sm outline-none border-transparent transition-all focus:bg-white focus:ring-2 focus:ring-purple-100 ${className}`}
     />
   );
 }
@@ -600,7 +623,7 @@ function TextArea({ value, onChange, placeholder, rows = 4 }) {
         backgroundColor: COLORS.subtle,
         color: COLORS.primary,
       }}
-      className="w-full rounded-lg px-4 py-3 text-sm outline-none border border-transparent transition-all focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-purple-100 resize-none"
+      className="w-full rounded-lg px-4 py-3 text-sm outline-none border-transparent transition-all focus:bg-white focus:ring-2 focus:ring-purple-100 resize-none"
     />
   );
 }
@@ -611,9 +634,8 @@ function OptionButton({ label, glyph, selected, onClick, fullWidth = true }) {
       onClick={onClick}
       style={{
         backgroundColor: selected ? COLORS.accentSoft : COLORS.card,
-        borderColor: selected ? COLORS.accent : '#e5e7eb',
       }}
-      className={`rounded-xl p-4 text-left transition-all duration-200 flex items-center justify-between border shadow-sm hover:shadow-md ${fullWidth ? 'w-full' : ''}`}
+      className={`rounded-xl p-4 text-left transition-all duration-200 flex items-center justify-between ${fullWidth ? 'w-full' : ''}`}
     >
       <div className="flex items-center gap-4">
         {glyph && (
@@ -624,7 +646,7 @@ function OptionButton({ label, glyph, selected, onClick, fullWidth = true }) {
             {glyph}
           </span>
         )}
-        <span className="text-base font-medium" style={{ color: COLORS.primary }}>{label}</span>
+        <span className="text-base font-medium f-hei" style={{ color: COLORS.primary }}>{label}</span>
       </div>
       {selected && <ChevronRight className="w-5 h-5" style={{ color: COLORS.accent }} />}
     </button>
@@ -635,7 +657,7 @@ function Toast({ message, show }) {
   if (!show) return null;
   return (
     <div
-      className="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm z-50 fade-in shadow-lg"
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm z-50 fade-in f-hei"
       style={{ backgroundColor: COLORS.primary, color: COLORS.canvas }}
     >
       {message}
@@ -652,12 +674,12 @@ function Modal({ open, onClose, children, title }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-gray-200 shadow-sm fade-in"
+        className="w-full max-w-md rounded-2xl fade-in"
         style={{ backgroundColor: COLORS.card }}
         onClick={e => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between px-5 py-4">
             <h3 className="t-h3" style={{ color: COLORS.primary }}>{title}</h3>
             <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100">
               <X className="w-4 h-4" style={{ color: COLORS.tertiary }} />
@@ -682,7 +704,7 @@ function MonthCalendar({ year, month, dailyRecords, weeklyRecords, onMonthChange
 
   return (
     <Card padding="p-0">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+      <div className="flex items-center justify-between px-5 py-4">
         <button
           onClick={() => onMonthChange(-1)}
           style={{ color: COLORS.secondary }}
@@ -706,7 +728,7 @@ function MonthCalendar({ year, month, dailyRecords, weeklyRecords, onMonthChange
         {['一', '二', '三', '四', '五', '六', '日'].map(d => (
           <div
             key={d}
-            className="text-center text-xs font-medium py-1"
+            className="text-center text-xs font-medium py-1 f-hei"
             style={{ color: COLORS.tertiary }}
           >
             {d}
@@ -719,7 +741,7 @@ function MonthCalendar({ year, month, dailyRecords, weeklyRecords, onMonthChange
           if (d.muted) {
             return (
               <div key={i} className="aspect-square flex items-center justify-center opacity-30">
-                <span className="text-xs" style={{ color: COLORS.tertiary }}>{d.day}</span>
+                <span className="text-xs f-hei" style={{ color: COLORS.tertiary }}>{d.day}</span>
               </div>
             );
           }
@@ -734,7 +756,7 @@ function MonthCalendar({ year, month, dailyRecords, weeklyRecords, onMonthChange
               className="rounded-lg flex flex-col items-center justify-start pt-1.5 pb-1 hover:bg-gray-50 transition-colors active:scale-95"
               style={{ minHeight: d.isSunday && weekly ? '80px' : '54px' }}
             >
-              <span className="text-sm font-medium" style={{ color: COLORS.primary }}>
+              <span className="text-sm font-medium f-hei" style={{ color: COLORS.primary }}>
                 {d.day}
               </span>
               <div
@@ -816,7 +838,7 @@ function DayDetail({ date, record, products, productImages, onBack, onEdit }) {
           style={{ color: COLORS.secondary }}
         >
           <ArrowLeft className="w-4 h-4" />
-          返回日历
+          <span className="f-song-bold-narrow">返回日历</span>
         </button>
         {record && (
           <OutlineButton onClick={onEdit} icon={Edit3}>编辑</OutlineButton>
@@ -853,7 +875,7 @@ function DayDetail({ date, record, products, productImages, onBack, onEdit }) {
                 {usedProducts.map(p => (
                   <div key={p.id} className="flex flex-col items-center w-20">
                     <div
-                      className="w-16 h-16 rounded-lg overflow-hidden mb-1 flex items-center justify-center border border-gray-200 shadow-sm"
+                      className="w-16 h-16 rounded-lg overflow-hidden mb-1 flex items-center justify-center"
                       style={{ backgroundColor: COLORS.subtle }}
                     >
                       {productImages[p.id] ? (
@@ -1228,9 +1250,9 @@ function RecordingFlow({ date, existingAnswers, products, productImages, onCompl
             style={{ color: COLORS.secondary }}
           >
             <ArrowLeft className="w-4 h-4" />
-            退回
+            <span className="f-song-bold-narrow">退回</span>
           </button>
-          <span className="text-xs font-mono" style={{ color: COLORS.tertiary }}>
+          <span className="text-xs f-hei-narrow" style={{ color: COLORS.tertiary }}>
             {step + 1} / {total}
           </span>
         </div>
@@ -1260,8 +1282,8 @@ function RecordingFlow({ date, existingAnswers, products, productImages, onCompl
       {/* Bottom action */}
       {!cur.autoNext && (
         <div
-          className="fixed bottom-0 left-0 right-0 px-5 py-4 backdrop-blur-md border-t border-gray-200"
-          style={{ backgroundColor: 'rgba(250, 241, 232, 0.9)' }}
+          className="fixed bottom-0 left-0 right-0 px-5 py-4"
+          style={{ backgroundColor: '#EFE5D5' }}
         >
           <PrimaryButton fullWidth onClick={next} icon={ChevronRight}>
             {step === total - 1 ? '完成,看预览' : '下一题'}
@@ -1345,10 +1367,9 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
                     }}
                     style={{
                       backgroundColor: selected ? COLORS.accentSoft : COLORS.card,
-                      borderColor: selected ? COLORS.accent : '#e5e7eb',
                       color: COLORS.primary,
                     }}
-                    className="px-4 py-2 rounded-full text-sm border shadow-sm transition-all hover:shadow-md"
+                    className="px-4 py-2 rounded-full text-sm transition-all"
                   >
                     {a.label}
                   </button>
@@ -1543,12 +1564,11 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
               }}
               style={{
                 backgroundColor: selected ? COLORS.accentSoft : COLORS.card,
-                borderColor: selected ? COLORS.accent : '#e5e7eb',
               }}
-              className="w-full rounded-xl p-4 text-left flex items-center gap-3 border shadow-sm transition-all hover:shadow-md"
+              className="w-full rounded-xl p-4 text-left flex items-center gap-3 transition-all"
             >
               <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200"
+                className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
                 style={{ backgroundColor: COLORS.subtle }}
               >
                 {productImages[s.id] ? (
@@ -1583,7 +1603,7 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
             }}
             placeholder="温度"
             style={{ backgroundColor: COLORS.subtle, color: COLORS.primary }}
-            className="flex-1 rounded-lg px-4 py-3 text-base outline-none border border-transparent focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-purple-100"
+            className="flex-1 rounded-lg px-4 py-3 text-base outline-none border-transparent focus:bg-white focus:ring-2 focus:ring-purple-100"
           />
           <span className="t-h3" style={{ color: COLORS.tertiary }}>℃</span>
         </div>
@@ -1610,15 +1630,13 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
               onClick={() => update(`environment.${item.key}`, !checked)}
               style={{
                 backgroundColor: checked ? COLORS.accentSoft : COLORS.card,
-                borderColor: checked ? COLORS.accent : '#e5e7eb',
               }}
-              className="w-full rounded-xl p-4 text-left flex items-center gap-3 border shadow-sm transition-all hover:shadow-md"
+              className="w-full rounded-xl p-4 text-left flex items-center gap-3 transition-all"
             >
               <div
-                className="w-5 h-5 rounded border flex items-center justify-center flex-shrink-0"
+                className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
                 style={{
-                  backgroundColor: checked ? COLORS.accent : 'transparent',
-                  borderColor: checked ? COLORS.accent : COLORS.tertiary,
+                  backgroundColor: checked ? COLORS.accent : COLORS.subtle,
                 }}
               >
                 {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
@@ -1640,7 +1658,7 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
               }}
               placeholder="0"
               style={{ backgroundColor: COLORS.subtle, color: COLORS.primary }}
-              className="flex-1 rounded-lg px-4 py-3 text-sm outline-none border border-transparent focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-purple-100"
+              className="flex-1 rounded-lg px-4 py-3 text-sm outline-none border-transparent focus:bg-white focus:ring-2 focus:ring-purple-100"
             />
             <span className="text-sm" style={{ color: COLORS.tertiary }}>分钟</span>
           </div>
@@ -1655,10 +1673,9 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
                   onClick={() => update('environment.sunWithSPF', o.v)}
                   style={{
                     backgroundColor: env.sunWithSPF === o.v ? COLORS.accentSoft : COLORS.card,
-                    borderColor: env.sunWithSPF === o.v ? COLORS.accent : '#e5e7eb',
                     color: COLORS.primary,
                   }}
-                  className="flex-1 px-4 py-2 rounded-full text-sm border shadow-sm transition-all"
+                  className="flex-1 px-4 py-2 rounded-full text-sm transition-all"
                 >
                   {o.label}
                 </button>
@@ -1711,15 +1728,13 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
               onClick={() => update(`physical.${item.key}`, !checked)}
               style={{
                 backgroundColor: checked ? COLORS.accentSoft : COLORS.card,
-                borderColor: checked ? COLORS.accent : '#e5e7eb',
               }}
-              className="w-full rounded-xl p-4 text-left flex items-center gap-3 border shadow-sm transition-all hover:shadow-md"
+              className="w-full rounded-xl p-4 text-left flex items-center gap-3 transition-all"
             >
               <div
-                className="w-5 h-5 rounded border flex items-center justify-center flex-shrink-0"
+                className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
                 style={{
-                  backgroundColor: checked ? COLORS.accent : 'transparent',
-                  borderColor: checked ? COLORS.accent : COLORS.tertiary,
+                  backgroundColor: checked ? COLORS.accent : COLORS.subtle,
                 }}
               >
                 {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
@@ -1772,10 +1787,9 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
                     onClick={() => update('physical.exercise', { ...ex, intensity: o.v })}
                     style={{
                       backgroundColor: ex.intensity === o.v ? COLORS.accentSoft : COLORS.card,
-                      borderColor: ex.intensity === o.v ? COLORS.accent : '#e5e7eb',
                       color: COLORS.primary,
                     }}
-                    className="flex-1 px-4 py-2 rounded-full text-sm border shadow-sm transition-all"
+                    className="flex-1 px-4 py-2 rounded-full text-sm transition-all"
                   >
                     {o.label}
                   </button>
@@ -1797,7 +1811,7 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
           value={answers.physical.bedtime || ''}
           onChange={e => update('physical.bedtime', e.target.value)}
           style={{ backgroundColor: COLORS.subtle, color: COLORS.primary }}
-          className="w-full rounded-lg px-4 py-3 text-base outline-none border border-transparent focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-purple-100"
+          className="w-full rounded-lg px-4 py-3 text-base outline-none border-transparent focus:bg-white focus:ring-2 focus:ring-purple-100"
         />
         <p className="t-caption mt-3" style={{ color: COLORS.tertiary }}>
           长期睡眠不足会影响皮肤屏障修复。
@@ -1869,7 +1883,7 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
                 }}
                 placeholder="1"
                 style={{ backgroundColor: COLORS.subtle, color: COLORS.primary }}
-                className="flex-1 rounded-lg px-4 py-3 text-base outline-none border border-transparent focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-purple-100"
+                className="flex-1 rounded-lg px-4 py-3 text-base outline-none border-transparent focus:bg-white focus:ring-2 focus:ring-purple-100"
               />
               <span className="text-sm" style={{ color: COLORS.tertiary }}>第几天</span>
             </div>
@@ -1931,15 +1945,13 @@ function SkincareRow({ item, value, onChange, products, productImages }) {
         onClick={() => onChange(!checked)}
         style={{
           backgroundColor: checked ? COLORS.accentSoft : COLORS.card,
-          borderColor: checked ? COLORS.accent : '#e5e7eb',
         }}
-        className="w-full rounded-xl p-4 text-left flex items-center gap-3 border shadow-sm transition-all hover:shadow-md"
+        className="w-full rounded-xl p-4 text-left flex items-center gap-3 transition-all"
       >
         <div
-          className="w-5 h-5 rounded border flex items-center justify-center flex-shrink-0"
+          className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
           style={{
-            backgroundColor: checked ? COLORS.accent : 'transparent',
-            borderColor: checked ? COLORS.accent : COLORS.tertiary,
+            backgroundColor: checked ? COLORS.accent : COLORS.subtle,
           }}
         >
           {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
@@ -1960,12 +1972,11 @@ function SkincareRow({ item, value, onChange, products, productImages }) {
         onClick={() => setPickerOpen(true)}
         style={{
           backgroundColor: selected ? COLORS.accentSoft : COLORS.card,
-          borderColor: selected ? COLORS.accent : '#e5e7eb',
         }}
-        className="w-full rounded-xl p-4 text-left flex items-center gap-3 border shadow-sm transition-all hover:shadow-md"
+        className="w-full rounded-xl p-4 text-left flex items-center gap-3 transition-all"
       >
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 flex-shrink-0"
+          className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
           style={{ backgroundColor: COLORS.subtle }}
         >
           {selected && productImages[selected.id] ? (
@@ -1991,7 +2002,7 @@ function SkincareRow({ item, value, onChange, products, productImages }) {
         <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2">
           <button
             onClick={() => { onChange(null); setPickerOpen(false); }}
-            className="w-full rounded-lg p-3 text-left text-sm border border-gray-200 shadow-sm hover:shadow-md transition-all"
+            className="w-full rounded-lg p-3 text-left text-sm transition-all"
             style={{ color: COLORS.secondary }}
           >
             ○ 跳过此项(今天没用)
@@ -2011,12 +2022,11 @@ function SkincareRow({ item, value, onChange, products, productImages }) {
                 onClick={() => { onChange(p.id); setPickerOpen(false); }}
                 style={{
                   backgroundColor: isSelected ? COLORS.accentSoft : COLORS.card,
-                  borderColor: isSelected ? COLORS.accent : '#e5e7eb',
                 }}
-                className="w-full rounded-lg p-3 text-left flex items-center gap-3 border shadow-sm hover:shadow-md transition-all"
+                className="w-full rounded-lg p-3 text-left flex items-center gap-3 transition-all"
               >
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
                   style={{ backgroundColor: COLORS.subtle }}
                 >
                   {productImages[p.id] ? (
@@ -2048,19 +2058,17 @@ function DietRow({ field, value = { had: false, detail: '' }, onChange }) {
     <div
       style={{
         backgroundColor: value.had ? COLORS.accentSoft : COLORS.card,
-        borderColor: value.had ? COLORS.accent : '#e5e7eb',
       }}
-      className="rounded-xl border shadow-sm transition-all"
+      className="rounded-xl transition-all"
     >
       <button
         onClick={() => onChange({ ...value, had: !value.had })}
         className="w-full p-4 text-left flex items-center gap-3"
       >
         <div
-          className="w-5 h-5 rounded border flex items-center justify-center flex-shrink-0"
+          className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
           style={{
-            backgroundColor: value.had ? COLORS.accent : 'transparent',
-            borderColor: value.had ? COLORS.accent : COLORS.tertiary,
+            backgroundColor: value.had ? COLORS.accent : COLORS.subtle,
           }}
         >
           {value.had && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
@@ -2105,7 +2113,7 @@ function RecordingPreview({ date, answers, products, productImages, onEdit, onSu
           style={{ color: COLORS.secondary }}
         >
           <ArrowLeft className="w-4 h-4" />
-          继续编辑
+          <span className="f-song-bold-narrow">继续编辑</span>
         </button>
         <span className="t-label" style={{ color: COLORS.tertiary }}>[预览]</span>
       </div>
@@ -2342,8 +2350,8 @@ function RecordingPreview({ date, answers, products, productImages, onEdit, onSu
       </div>
 
       <div
-        className="fixed bottom-0 left-0 right-0 px-5 py-4 backdrop-blur-md border-t border-gray-200"
-        style={{ backgroundColor: 'rgba(250, 241, 232, 0.9)' }}
+        className="fixed bottom-0 left-0 right-0 px-5 py-4"
+          style={{ backgroundColor: '#EFE5D5' }}
       >
         <PrimaryButton fullWidth onClick={onSubmit} icon={Check}>
           提交记录
@@ -2422,7 +2430,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
             style={{ color: COLORS.secondary }}
           >
             <ArrowLeft className="w-4 h-4" />
-            取消
+            <span className="f-song-bold-narrow">取消</span>
           </button>
           <PrimaryButton onClick={() => { onSaveRoutine(routineDraft); setRoutineEditing(false); }} icon={Check}>
             保存
@@ -2441,7 +2449,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
             color: COLORS.primary,
             fontFamily: '"ChillHuoSong_F", monospace',
           }}
-          className="w-full rounded-xl px-4 py-3 text-sm outline-none border border-gray-200 shadow-sm focus:bg-white focus:ring-2 focus:ring-purple-100 resize-none"
+          className="w-full rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-purple-100 resize-none"
         />
       </div>
     );
@@ -2467,7 +2475,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
             style={{ color: COLORS.accent }}
           >
             <Edit3 className="w-3.5 h-3.5" />
-            编辑
+            <span className="f-song-bold-narrow">编辑</span>
           </button>
         </div>
         <Card emphasis>
@@ -2490,7 +2498,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
             style={{ color: COLORS.accent }}
           >
             <Edit3 className="w-3.5 h-3.5" />
-            编辑
+            <span className="f-song-bold-narrow">编辑</span>
           </button>
         </div>
         {topProducts.length === 0 ? (
@@ -2510,7 +2518,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
               {topProducts.map(p => (
                 <div key={p.id} className="flex flex-col items-center">
                   <div
-                    className="w-16 h-16 rounded-xl overflow-hidden mb-2 border border-gray-200 shadow-sm flex items-center justify-center"
+                    className="w-16 h-16 rounded-xl overflow-hidden mb-2 flex items-center justify-center"
                     style={{ backgroundColor: COLORS.subtle }}
                   >
                     {productImages[p.id] ? (
@@ -2548,7 +2556,7 @@ function ProductEditPage({ products, productImages, onDelete, onAddNew, onBack }
           style={{ color: COLORS.secondary }}
         >
           <ArrowLeft className="w-4 h-4" />
-          返回
+          <span className="f-song-bold-narrow">返回</span>
         </button>
         <PrimaryButton onClick={onAddNew} icon={Plus}>添加产品</PrimaryButton>
       </div>
@@ -2580,7 +2588,7 @@ function ProductEditPage({ products, productImages, onDelete, onAddNew, onBack }
                 <Card key={p.id}>
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center flex-shrink-0"
+                      className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: COLORS.subtle }}
                     >
                       {productImages[p.id] ? (
@@ -2703,9 +2711,11 @@ function ProductAddPage({ onSave, onCancel, onImageChange }) {
           style={{ color: COLORS.secondary }}
         >
           <ArrowLeft className="w-4 h-4" />
-          取消
+          <span className="f-song-bold-narrow">取消</span>
         </button>
-        <span className="t-label" style={{ color: COLORS.tertiary }}>[NEW · {drafts.length}]</span>
+        <PrimaryButton onClick={handleSave} icon={Check}>
+          保存 ({drafts.length})
+        </PrimaryButton>
       </div>
 
       <div>
@@ -2736,7 +2746,7 @@ function ProductAddPage({ onSave, onCancel, onImageChange }) {
             {/* Image */}
             <div className="flex items-start gap-3 mb-4">
               <label
-                className="w-20 h-20 rounded-xl border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                className="w-20 h-20 rounded-xl flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
                 style={{ backgroundColor: COLORS.subtle }}
               >
                 {d.imageBase64 ? (
@@ -2764,7 +2774,7 @@ function ProductAddPage({ onSave, onCancel, onImageChange }) {
                 value={d.brand}
                 onChange={e => updateDraft(idx, 'brand', e.target.value)}
                 style={{ backgroundColor: COLORS.subtle, color: COLORS.primary }}
-                className="w-full rounded-lg px-4 py-3 text-sm outline-none border border-transparent focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-purple-100"
+                className="w-full rounded-lg px-4 py-3 text-sm outline-none border-transparent focus:bg-white focus:ring-2 focus:ring-purple-100"
               >
                 <option value="">选择品牌...</option>
                 {BRAND_PRESETS.map(b => (
@@ -2803,10 +2813,9 @@ function ProductAddPage({ onSave, onCancel, onImageChange }) {
                       onClick={() => updateDraft(idx, 'category', c.id)}
                       style={{
                         backgroundColor: selected ? COLORS.accentSoft : COLORS.card,
-                        borderColor: selected ? COLORS.accent : '#e5e7eb',
                         color: COLORS.primary,
                       }}
-                      className="px-3 py-2 rounded-lg text-xs border shadow-sm transition-all flex items-center justify-center gap-1.5"
+                      className="px-3 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5"
                     >
                       <Icon className="w-3.5 h-3.5" />
                       {c.label}
@@ -2832,15 +2841,6 @@ function ProductAddPage({ onSave, onCancel, onImageChange }) {
       <OutlineButton fullWidth onClick={addBlank} icon={Plus}>
         继续添加
       </OutlineButton>
-
-      <div
-        className="fixed bottom-0 left-0 right-0 px-5 py-4 backdrop-blur-md border-t border-gray-200"
-        style={{ backgroundColor: 'rgba(250, 241, 232, 0.9)' }}
-      >
-        <PrimaryButton fullWidth onClick={handleSave} icon={Check}>
-          保存所有 ({drafts.length})
-        </PrimaryButton>
-      </div>
     </div>
   );
 }
@@ -2909,9 +2909,9 @@ function ExportTab({ allData, onImport, showToast }) {
           </p>
           <div className="flex flex-wrap gap-3">
             <PrimaryButton onClick={exportJSON} icon={Download}>导出 JSON</PrimaryButton>
-            <OutlineButton onClick={() => fileInputRef.current?.click()} icon={Upload}>
+            <PrimaryButton onClick={() => fileInputRef.current?.click()} icon={Upload}>
               导入 JSON
-            </OutlineButton>
+            </PrimaryButton>
             <input
               ref={fileInputRef}
               type="file"
@@ -2934,13 +2934,13 @@ function ExportTab({ allData, onImport, showToast }) {
           <p className="t-body mb-4" style={{ color: COLORS.secondary }}>
             生成阅读友好的 Markdown 文件。给医生看、自己回顾、给 AI 分析都更舒服。
           </p>
-          <OutlineButton
+          <PrimaryButton
             onClick={() => showToast('Phase 2 即将上线')}
             icon={FileText}
             disabled={false}
           >
             导出 Markdown
-          </OutlineButton>
+          </PrimaryButton>
         </Card>
       </div>
 
@@ -3298,9 +3298,9 @@ function App() {
 
       {/* Bottom Tab Bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 backdrop-blur-md border-t border-gray-200"
+        className="fixed bottom-0 left-0 right-0"
         style={{
-          backgroundColor: 'rgba(250, 241, 232, 0.9)',
+          backgroundColor: '#EFE5D5',
           height: '64px',
         }}
       >
@@ -3326,7 +3326,7 @@ function App() {
                   />
                 )}
                 <Icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{t.label}</span>
+                <span className="text-[11px] f-song-bold-narrow">{t.label}</span>
               </button>
             );
           })}
