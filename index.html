@@ -692,6 +692,51 @@ function Modal({ open, onClose, children, title }) {
   );
 }
 
+
+// ============================================================
+// MODULES + SCREEN DEFINITIONS (declarative recording flow)
+// ============================================================
+
+const MODULES = [
+  { id: 'skin', label: '皮肤状态', desc: '泛红 / 灼热 / 痒 / 粗糙 / 丘疹 / 拍照', screens: ['redness', 'burning', 'itch', 'roughness', 'papules', 'photos'] },
+  { id: 'morning', label: '早间护肤', desc: 'Finacea + 洁面 / 保湿 / 防晒', screens: ['skincare-morning'] },
+  { id: 'evening', label: '晚间护肤', desc: 'Finacea + 洁面 / 保湿 + 抗真菌洗发水', screens: ['skincare-evening', 'shampoo'] },
+  { id: 'diet', label: '饮食', desc: '诱因食物 + 热饮 + 营养补剂', screens: ['diet-1', 'hotdrinks', 'supplements'] },
+  { id: 'env', label: '环境', desc: '户外温度 + 室内 / 温差 / 阳光等', screens: ['outdoor-temp', 'environment'] },
+  { id: 'phys', label: '生理与生活', desc: '出汗 / 热水 / 运动 / 睡眠 / 压力 / 月经 / 纺织品', screens: ['sweating', 'hotwater', 'exercise', 'bedtime', 'stress', 'period', 'textile'] },
+  { id: 'notes', label: '备注', desc: '今日观察 / 特殊情况', screens: ['notes'] },
+];
+
+const SCREEN_DEFS = {
+  redness: { kind: 'compare', section: '皮肤状态', title: '整体泛红?', sub: '对比昨天,你的整体面部泛红有什么变化?', field: 'skin.redness', autoNext: true },
+  burning: { kind: 'compare', section: '皮肤状态', title: '灼热 / 刺痛?', sub: '对比昨天,有没有灼热感或刺痛感?', field: 'skin.burning', autoNext: true },
+  itch: { kind: 'compare', section: '皮肤状态', title: '痒感?', sub: '对比昨天,皮肤有没有痒感?', field: 'skin.itch', autoNext: true },
+  roughness: { kind: 'compare', section: '皮肤状态', title: '触摸粗糙度?', sub: '对比昨天,摸上去的粗糙感有变化吗?', field: 'skin.roughness', autoNext: true },
+  papules: { kind: 'papules', section: '皮肤状态', title: '新出丘疹?', sub: '今天有新冒出的红丘疹/小颗粒吗?' },
+  photos: { kind: 'photos', section: '皮肤状态', title: '今天有拍照吗?', sub: '记录下照片文件名(在 iCloud/相册里),最多 3 张。app 不存储图片本身。' },
+  'skincare-morning': { kind: 'skincare-morning', section: '早间护肤', title: '今天早间做了什么?', sub: '勾选今天早上完成的步骤。' },
+  'skincare-evening': { kind: 'skincare-evening', section: '晚间护肤', title: '今天晚间做了什么?', sub: '勾选今天晚上完成的步骤。' },
+  shampoo: { kind: 'shampoo', section: '晚间护肤', title: '抗真菌洗发水今天用了吗?', sub: '本周建议 2 次。', autoNext: true },
+  'diet-1': { kind: 'diet-1', section: '饮食', title: '今天有这些诱因食物吗?', sub: '勾选有摄入的项目。' },
+  hotdrinks: { kind: 'hotdrinks', section: '饮食', title: '今天喝了几杯热饮?', sub: '热饮可能因为温度而非咖啡因诱发反应。' },
+  supplements: { kind: 'supplements', section: '饮食', title: '今天吃了什么营养补剂?', sub: '从产品库中选择(可多选)。' },
+  'outdoor-temp': { kind: 'outdoor-temp', section: '环境', title: '今天户外温度大约多少?', sub: '英国五月通常 8-18℃ 之间。' },
+  environment: { kind: 'environment', section: '环境', title: '环境状况', sub: '勾选符合今天的项目。' },
+  sweating: { kind: 'sweating', section: '生理', title: '今天出汗情况?', sub: '汗液本身可能加重玫瑰痤疮。', autoNext: true },
+  hotwater: { kind: 'hotwater', section: '生理', title: '今天接触了热水吗?', sub: '热水澡和热水洗脸都可能诱发血管反应。' },
+  exercise: { kind: 'exercise', section: '生理', title: '今天有运动吗?' },
+  bedtime: { kind: 'bedtime', section: '生活', title: '昨晚上床时间?' },
+  stress: { kind: 'stress', section: '生活', title: '今天压力大吗?' },
+  period: { kind: 'period', section: '生理', title: '月经情况?', sub: '黄体期(经前一周)激素波动可能加重皮肤状态。' },
+  textile: { kind: 'textile', section: '生活', title: '今天接触新的纺织品了吗?', sub: '新洗涤剂、新枕套、新围巾、新口罩等都算。', autoNext: true },
+  notes: { kind: 'notes', section: '备注', title: '今天有什么备注吗?', sub: '今日特殊情况、跟昨天比较、其他观察(可留空)。' },
+};
+
+// Build full screen objects with module assignment
+const SCREENS = MODULES.flatMap(m =>
+  m.screens.map(id => ({ id, module: m.id, ...SCREEN_DEFS[id] }))
+);
+
 // ============================================================
 // CALENDAR TAB
 // ============================================================
@@ -1014,19 +1059,43 @@ function DayDetail({ date, record, products, productImages, onBack, onEdit }) {
 // RECORDING FLOW
 // ============================================================
 
-function RecordingFlow({ date, existingAnswers, products, productImages, onComplete, onCancel }) {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState(existingAnswers || {
-    skin: {},
-    skincare: { morning: {}, evening: {} },
-    diet: {},
-    environment: {},
-    physical: {},
-    notes: '',
+function RecordingFlow({ date, existingRecord, products, productImages, dailyRecords = {}, onComplete, onCancel }) {
+  // ===== STATE =====
+  const [answers, setAnswers] = useState(() => {
+    if (existingRecord) {
+      return JSON.parse(JSON.stringify(existingRecord));
+    }
+    return {
+      skin: {}, skincare: { morning: {}, evening: {} },
+      diet: {}, environment: {}, physical: {}, notes: '',
+    };
   });
-  const [showPreview, setShowPreview] = useState(false);
+  // mode: 'mode-select' (new only) | 'walkthrough' | 'edit-single' | 'preview'
+  const [mode, setMode] = useState(existingRecord ? 'preview' : 'mode-select');
+  const [activeModules, setActiveModules] = useState(MODULES.map(m => m.id));
+  const [step, setStep] = useState(0);
+  const [editingScreenId, setEditingScreenId] = useState(null);
+  const [dirty, setDirty] = useState(false);
+  const [showConfirmExit, setShowConfirmExit] = useState(false);
 
+  const walkthroughScreens = SCREENS.filter(s => activeModules.includes(s.module));
+
+  // Compute this week's shampoo count for ScreenContent
+  const shampooWeekCount = (() => {
+    const dateObj = parseDate(date);
+    const wkKey = getWeekKey(dateObj);
+    let count = 0;
+    Object.entries(dailyRecords).forEach(([d, rec]) => {
+      if (d === date) return;
+      if (getWeekKey(parseDate(d)) !== wkKey) return;
+      if (rec.skincare?.antifungalShampooToday === true) count++;
+    });
+    return count;
+  })();
+
+  // ===== HANDLERS =====
   const update = (path, value) => {
+    setDirty(true);
     setAnswers(prev => {
       const next = { ...prev };
       const parts = path.split('.');
@@ -1040,256 +1109,369 @@ function RecordingFlow({ date, existingAnswers, products, productImages, onCompl
     });
   };
 
-  const compareScreens = [
-    { id: 'redness', title: '整体泛红?', sub: '对比昨天,你的整体面部泛红有什么变化?' },
-    { id: 'burning', title: '灼热 / 刺痛?', sub: '对比昨天,有没有灼热感或刺痛感?' },
-    { id: 'itch', title: '痒感?', sub: '对比昨天,皮肤有没有痒感?' },
-    { id: 'roughness', title: '触摸粗糙度?', sub: '对比昨天,摸上去的粗糙感有变化吗?' },
-  ];
-
-  const screens = [
-    // 1-4: 4 个 compare 类型
-    ...compareScreens.map((s, idx) => ({
-      kind: 'compare',
-      number: String(idx + 1).padStart(2, '0'),
-      section: '皮肤状态',
-      title: s.title,
-      sub: s.sub,
-      field: `skin.${s.id}`,
-      value: answers.skin[s.id],
-      autoNext: true,
-    })),
-    // 5: 新出丘疹
-    {
-      kind: 'papules',
-      number: '05',
-      section: '皮肤状态',
-      title: '新出丘疹?',
-      sub: '今天有新冒出的红丘疹/小颗粒吗?',
-    },
-    // 6: 拍照
-    {
-      kind: 'photos',
-      number: '06',
-      section: '皮肤状态',
-      title: '今天有拍照吗?',
-      sub: '记录下照片文件名(在 iCloud/相册里),最多 3 张。app 不存储图片本身。',
-    },
-    // 7: 早间
-    {
-      kind: 'skincare-morning',
-      number: '07',
-      section: '用药与护肤',
-      title: '今天早间做了什么?',
-      sub: '勾选今天早上完成的步骤。',
-    },
-    // 8: 晚间
-    {
-      kind: 'skincare-evening',
-      number: '08',
-      section: '用药与护肤',
-      title: '今天晚间做了什么?',
-      sub: '勾选今天晚上完成的步骤。',
-    },
-    // 9: 抗真菌洗发水
-    {
-      kind: 'shampoo',
-      number: '09',
-      section: '用药与护肤',
-      title: '抗真菌洗发水今天用了吗?',
-      sub: '本周第几次?',
-      autoNext: true,
-    },
-    // 10: 饮食(组合)
-    {
-      kind: 'diet-1',
-      number: '10',
-      section: '饮食',
-      title: '今天有这些诱因食物吗?',
-      sub: '勾选有摄入的项目。',
-    },
-    // 11: 饮食 - 热饮
-    {
-      kind: 'hotdrinks',
-      number: '11',
-      section: '饮食',
-      title: '今天喝了几杯热饮?',
-      sub: '热饮可能因为温度而非咖啡因诱发反应。',
-    },
-    // 12: 营养补剂
-    {
-      kind: 'supplements',
-      number: '12',
-      section: '饮食',
-      title: '今天吃了什么营养补剂?',
-      sub: '从产品库中选择(可多选)。',
-    },
-    // 13: 户外温度
-    {
-      kind: 'outdoor-temp',
-      number: '13',
-      section: '环境',
-      title: '今天户外温度大约多少?',
-      sub: '英国五月通常 8-18℃ 之间。',
-    },
-    // 14: 环境(组合)
-    {
-      kind: 'environment',
-      number: '14',
-      section: '环境',
-      title: '环境状况',
-      sub: '勾选符合今天的项目。',
-    },
-    // 15: 出汗
-    {
-      kind: 'sweating',
-      number: '15',
-      section: '生理',
-      title: '今天出汗情况?',
-      sub: '汗液本身可能加重玫瑰痤疮。',
-      autoNext: true,
-    },
-    // 16: 热水
-    {
-      kind: 'hotwater',
-      number: '16',
-      section: '生理',
-      title: '今天接触了热水吗?',
-      sub: '热水澡和热水洗脸都可能诱发血管反应。',
-    },
-    // 17: 运动
-    {
-      kind: 'exercise',
-      number: '17',
-      section: '生理',
-      title: '今天有运动吗?',
-    },
-    // 18: 上床时间
-    {
-      kind: 'bedtime',
-      number: '18',
-      section: '生活',
-      title: '昨晚上床时间?',
-    },
-    // 19: 压力
-    {
-      kind: 'stress',
-      number: '19',
-      section: '生活',
-      title: '今天压力大吗?',
-    },
-    // 20: 月经
-    {
-      kind: 'period',
-      number: '20',
-      section: '生理',
-      title: '月经情况?',
-      sub: '黄体期(经前一周)激素波动可能加重皮肤状态。',
-    },
-    // 21: 接触新纺织品
-    {
-      kind: 'textile',
-      number: '21',
-      section: '生活',
-      title: '今天接触新的纺织品了吗?',
-      sub: '新洗涤剂、新枕套、新围巾、新口罩等都算。',
-      autoNext: true,
-    },
-    // 22: 备注
-    {
-      kind: 'notes',
-      number: '22',
-      section: '备注',
-      title: '今天有什么备注吗?',
-      sub: '今日特殊情况、跟昨天比较、其他观察(可留空)。',
-    },
-  ];
-
-  const total = screens.length;
-  const cur = screens[step];
-  const progress = ((step + 1) / total) * 100;
-
-  const next = () => {
-    if (step < total - 1) {
-      setStep(step + 1);
-    } else {
-      setShowPreview(true);
-    }
-  };
-  const back = () => {
-    if (step > 0) setStep(step - 1);
+  const requestExit = () => {
+    if (dirty) setShowConfirmExit(true);
     else onCancel();
   };
+  const confirmExit = () => { setShowConfirmExit(false); onCancel(); };
 
-  if (showPreview) {
-    return <RecordingPreview
-      date={date}
-      answers={answers}
-      products={products}
-      productImages={productImages}
-      onEdit={(targetStep) => { setStep(targetStep); setShowPreview(false); }}
-      onSubmit={() => onComplete(answers)}
-      onCancel={() => setShowPreview(false)}
-    />;
+  const next = () => {
+    if (step < walkthroughScreens.length - 1) setStep(step + 1);
+    else setMode('preview');
+  };
+  const prev = () => {
+    if (step > 0) setStep(step - 1);
+    else if (!existingRecord) setMode('mode-select');
+  };
+
+  // ===== MODE-SELECT =====
+  if (mode === 'mode-select') {
+    return (
+      <ModeSelector
+        date={date}
+        onFull={() => {
+          setActiveModules(MODULES.map(m => m.id));
+          setStep(0);
+          setMode('walkthrough');
+        }}
+        onModulesChosen={(ids) => {
+          setActiveModules(ids);
+          setStep(0);
+          setMode('walkthrough');
+        }}
+        onCancel={onCancel}
+      />
+    );
   }
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      {/* Progress bar */}
-      <div className="sticky top-0 z-10" style={{ backgroundColor: COLORS.canvas }}>
-        <div className="h-0.5" style={{ backgroundColor: '#EDEAE3' }}>
-          <div
-            className="h-full transition-all duration-500"
-            style={{ width: `${progress}%`, backgroundColor: COLORS.accent }}
+  // ===== WALKTHROUGH =====
+  if (mode === 'walkthrough') {
+    if (walkthroughScreens.length === 0) {
+      // Edge case: no modules selected somehow
+      return (
+        <div className="p-8 text-center" style={{ color: COLORS.tertiary }}>
+          <p className="t-body">没有可记录的模块。</p>
+          <PrimaryButton onClick={() => setMode('mode-select')}>返回选择</PrimaryButton>
+        </div>
+      );
+    }
+    const cur = walkthroughScreens[step];
+    const progress = ((step + 1) / walkthroughScreens.length) * 100;
+    const showPrev = step > 0 || !existingRecord;
+    return (
+      <>
+        <div className="min-h-screen flex flex-col">
+          <div className="sticky top-0 z-10" style={{ backgroundColor: COLORS.canvas }}>
+            <div className="h-0.5" style={{ backgroundColor: '#EDEAE3' }}>
+              <div className="h-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: COLORS.accent }} />
+            </div>
+            <div className="flex items-center justify-between px-5 py-4">
+              <button
+                onClick={requestExit}
+                className="flex items-center gap-1 text-sm hover:opacity-70 transition-opacity"
+                style={{ color: COLORS.secondary }}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="f-song-bold-narrow">退回</span>
+              </button>
+              <span className="text-xs f-hei-narrow" style={{ color: COLORS.tertiary }}>
+                {step + 1} / {walkthroughScreens.length}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex-1 px-5 pb-32 pt-2">
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{String(step + 1).padStart(2, '0')}</span>
+              <span className="t-label" style={{ color: COLORS.tertiary }}>[{cur.section}]</span>
+            </div>
+            <h1 className="t-h2 mb-2" style={{ color: COLORS.primary }}>{cur.title}</h1>
+            {cur.sub && <p className="t-body mb-6" style={{ color: COLORS.secondary }}>{cur.sub}</p>}
+
+            <ScreenContent
+              screen={cur}
+              answers={answers}
+              update={update}
+              products={products}
+              productImages={productImages}
+              onAutoNext={next}
+              shampooWeekCount={shampooWeekCount}
+            />
+          </div>
+
+          {!cur.autoNext && (
+            <div
+              className="fixed bottom-0 left-0 right-0 px-5 py-4"
+              style={{ backgroundColor: '#EFE5D5' }}
+            >
+              <div className="flex gap-3">
+                {showPrev && (
+                  <OutlineButton onClick={prev} icon={ChevronLeft}>上一题</OutlineButton>
+                )}
+                <PrimaryButton fullWidth onClick={next} icon={ChevronRight}>
+                  {step === walkthroughScreens.length - 1 ? '完成,看预览' : '下一题'}
+                </PrimaryButton>
+              </div>
+            </div>
+          )}
+        </div>
+        {showConfirmExit && <ConfirmExitModal onConfirm={confirmExit} onCancel={() => setShowConfirmExit(false)} />}
+      </>
+    );
+  }
+
+  // ===== EDIT-SINGLE =====
+  if (mode === 'edit-single') {
+    const screen = SCREENS.find(s => s.id === editingScreenId);
+    if (!screen) {
+      setMode('preview');
+      return null;
+    }
+    const editDone = () => {
+      setEditingScreenId(null);
+      setMode('preview');
+    };
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="sticky top-0 z-10" style={{ backgroundColor: COLORS.canvas }}>
+          <div className="flex items-center justify-between px-5 py-4">
+            <button
+              onClick={editDone}
+              className="flex items-center gap-1 text-sm hover:opacity-70 transition-opacity"
+              style={{ color: COLORS.secondary }}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="f-song-bold-narrow">回到预览</span>
+            </button>
+            <span className="t-label" style={{ color: COLORS.accent }}>[修改中]</span>
+          </div>
+        </div>
+
+        <div className="flex-1 px-5 pb-32 pt-2">
+          <div className="flex items-baseline gap-3 mb-2">
+            <span className="t-label" style={{ color: COLORS.tertiary }}>[{screen.section}]</span>
+          </div>
+          <h1 className="t-h2 mb-2" style={{ color: COLORS.primary }}>{screen.title}</h1>
+          {screen.sub && <p className="t-body mb-6" style={{ color: COLORS.secondary }}>{screen.sub}</p>}
+
+          <ScreenContent
+            screen={screen}
+            answers={answers}
+            update={update}
+            products={products}
+            productImages={productImages}
+            onAutoNext={editDone}
+            shampooWeekCount={shampooWeekCount}
           />
         </div>
-        <div className="flex items-center justify-between px-5 py-4">
+
+        {!screen.autoNext && (
+          <div
+            className="fixed bottom-0 left-0 right-0 px-5 py-4"
+            style={{ backgroundColor: '#EFE5D5' }}
+          >
+            <PrimaryButton fullWidth onClick={editDone} icon={Check}>完成修改</PrimaryButton>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ===== PREVIEW =====
+  if (mode === 'preview') {
+    return (
+      <>
+        <RecordingPreview
+          date={date}
+          answers={answers}
+          products={products}
+          productImages={productImages}
+          activeModules={activeModules}
+          onEditScreen={(screenId) => {
+            setEditingScreenId(screenId);
+            setMode('edit-single');
+          }}
+          onSubmit={() => onComplete(answers)}
+          onExit={requestExit}
+        />
+        {showConfirmExit && <ConfirmExitModal onConfirm={confirmExit} onCancel={() => setShowConfirmExit(false)} />}
+      </>
+    );
+  }
+
+  return null;
+}
+
+// ============================================================
+// MODE SELECTOR (one-time vs module-based)
+// ============================================================
+
+function ModeSelector({ date, onFull, onModulesChosen, onCancel }) {
+  const [picking, setPicking] = useState(false);
+  const [selected, setSelected] = useState({});
+
+  const dateObj = parseDate(date);
+  const weekday = ['日', '一', '二', '三', '四', '五', '六'][dateObj.getDay()];
+
+  if (picking) {
+    const allOn = MODULES.every(m => selected[m.id]);
+    const anyOn = MODULES.some(m => selected[m.id]);
+    const totalScreens = MODULES.filter(m => selected[m.id]).reduce((a, m) => a + m.screens.length, 0);
+
+    return (
+      <div className="min-h-screen pb-32">
+        <div className="px-5 pt-6 pb-4 flex items-center justify-between">
           <button
-            onClick={back}
-            className="flex items-center gap-1 text-sm hover:opacity-70 transition-opacity"
+            onClick={() => setPicking(false)}
+            className="flex items-center gap-1 text-sm hover:opacity-70"
             style={{ color: COLORS.secondary }}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="f-song-bold-narrow">退回</span>
+            <span className="f-song-bold-narrow">返回</span>
           </button>
-          <span className="text-xs f-hei-narrow" style={{ color: COLORS.tertiary }}>
-            {step + 1} / {total}
-          </span>
+          <button
+            onClick={() => {
+              if (allOn) setSelected({});
+              else setSelected(MODULES.reduce((a, m) => ({ ...a, [m.id]: true }), {}));
+            }}
+            className="text-xs hover:opacity-70"
+            style={{ color: COLORS.accent }}
+          >
+            <span className="f-song-bold-narrow">{allOn ? '全不选' : '全选'}</span>
+          </button>
         </div>
-      </div>
 
-      {/* Question content */}
-      <div className="flex-1 px-5 pb-32 pt-2">
-        <div className="flex items-baseline gap-3 mb-2">
-          <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{cur.number}</span>
-          <span className="t-label" style={{ color: COLORS.tertiary }}>[{cur.section}]</span>
+        <div className="px-5 mb-6">
+          <span className="t-label" style={{ color: COLORS.tertiary }}>{date.replace(/-/g, ' / ')} · 周{weekday}</span>
+          <h1 className="t-h1 mt-2" style={{ color: COLORS.primary }}>选择记录模块</h1>
+          <p className="t-body mt-2" style={{ color: COLORS.secondary }}>
+            勾选今天想记录的部分。可以多选,也可以只选一个。
+          </p>
         </div>
-        <h1 className="t-h2 mb-2" style={{ color: COLORS.primary }}>{cur.title}</h1>
-        {cur.sub && (
-          <p className="t-body mb-6" style={{ color: COLORS.secondary }}>{cur.sub}</p>
-        )}
 
-        <ScreenContent
-          screen={cur}
-          answers={answers}
-          update={update}
-          products={products}
-          productImages={productImages}
-          onAutoNext={next}
-        />
-      </div>
+        <div className="px-5 space-y-3">
+          {MODULES.map((m, idx) => {
+            const checked = !!selected[m.id];
+            return (
+              <button
+                key={m.id}
+                onClick={() => setSelected(prev => ({ ...prev, [m.id]: !checked }))}
+                style={{ backgroundColor: checked ? COLORS.accentSoft : COLORS.card }}
+                className="w-full rounded-xl p-4 text-left flex items-start gap-3 transition-all"
+              >
+                <div
+                  className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ backgroundColor: checked ? COLORS.accent : COLORS.subtle }}
+                >
+                  {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{String(idx + 1).padStart(2, '0')}</span>
+                    <span className="text-base font-medium f-hei" style={{ color: COLORS.primary }}>{m.label}</span>
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: COLORS.secondary }}>{m.desc}</div>
+                </div>
+                <span className="text-xs f-hei-narrow flex-shrink-0 mt-1" style={{ color: COLORS.tertiary }}>
+                  {m.screens.length} 题
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Bottom action */}
-      {!cur.autoNext && (
         <div
           className="fixed bottom-0 left-0 right-0 px-5 py-4"
           style={{ backgroundColor: '#EFE5D5' }}
         >
-          <PrimaryButton fullWidth onClick={next} icon={ChevronRight}>
-            {step === total - 1 ? '完成,看预览' : '下一题'}
+          <PrimaryButton
+            fullWidth
+            disabled={!anyOn}
+            onClick={() => onModulesChosen(Object.keys(selected).filter(k => selected[k]))}
+            icon={ChevronRight}
+          >
+            开始记录 ({totalScreens} 题)
           </PrimaryButton>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-12">
+      <div className="px-5 pt-6 pb-4">
+        <button
+          onClick={onCancel}
+          className="flex items-center gap-1 text-sm hover:opacity-70"
+          style={{ color: COLORS.secondary }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="f-song-bold-narrow">取消</span>
+        </button>
+      </div>
+
+      <div className="px-5 mb-8">
+        <span className="t-label" style={{ color: COLORS.tertiary }}>{date.replace(/-/g, ' / ')} · 周{weekday}</span>
+        <h1 className="t-h1 mt-2" style={{ color: COLORS.primary }}>开始记录</h1>
+        <p className="t-body mt-2" style={{ color: COLORS.secondary }}>选择记录方式。</p>
+      </div>
+
+      <div className="px-5 space-y-4">
+        <Card onClick={onFull}>
+          <div className="flex items-baseline gap-3 mb-2">
+            <span className="t-en" style={{ color: COLORS.tertiary }}>01</span>
+            <h2 className="t-h2" style={{ color: COLORS.primary }}>一次性记录</h2>
+          </div>
+          <p className="t-body" style={{ color: COLORS.secondary }}>
+            按顺序走完全部 22 题(约 3-5 分钟)。适合一天结束统一记录。
+          </p>
+        </Card>
+
+        <Card onClick={() => setPicking(true)}>
+          <div className="flex items-baseline gap-3 mb-2">
+            <span className="t-en" style={{ color: COLORS.tertiary }}>02</span>
+            <h2 className="t-h2" style={{ color: COLORS.primary }}>自选模块记录</h2>
+          </div>
+          <p className="t-body" style={{ color: COLORS.secondary }}>
+            选择想记录的部分(早间护肤、晚间护肤、皮肤状态等)。适合事件刚发生时随手记。
+          </p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// CONFIRM EXIT MODAL (放弃修改确认)
+// ============================================================
+
+function ConfirmExitModal({ onConfirm, onCancel }) {
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(31, 45, 38, 0.4)' }}
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl fade-in"
+        style={{ backgroundColor: COLORS.card, padding: '24px' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <h3 className="t-h3 mb-3" style={{ color: COLORS.primary }}>放弃这次修改?</h3>
+        <p className="t-body mb-6" style={{ color: COLORS.secondary }}>
+          你做了一些修改但还没保存。确认退出会丢失这些改动。
+        </p>
+        <div className="flex gap-3">
+          <OutlineButton fullWidth onClick={onCancel}>继续编辑</OutlineButton>
+          <button
+            onClick={onConfirm}
+            style={{ backgroundColor: COLORS.rose, color: '#FFFFFF' }}
+            className="flex-1 rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 active:scale-95"
+          >
+            <span className="f-hei">放弃修改</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1298,7 +1480,7 @@ function RecordingFlow({ date, existingAnswers, products, productImages, onCompl
 // SCREEN CONTENT (per question type)
 // ============================================================
 
-function ScreenContent({ screen, answers, update, products, productImages, onAutoNext }) {
+function ScreenContent({ screen, answers, update, products, productImages, onAutoNext, shampooWeekCount }) {
   // 1) Compare type
   if (screen.kind === 'compare') {
     const opts = [
@@ -1443,28 +1625,36 @@ function ScreenContent({ screen, answers, update, products, productImages, onAut
     );
   }
 
-  // 5) Shampoo
+  // 5) Shampoo - boolean per day, auto-aggregated weekly
   if (screen.kind === 'shampoo') {
-    const opts = [
-      { v: 0, label: '今天没用' },
-      { v: 1, label: '本周第 1 次' },
-      { v: 2, label: '本周第 2 次' },
-      { v: 3, label: '本周第 3 次或更多' },
-    ];
+    // Read pre-existing weekly count from props (passed from RecordingFlow)
+    const today = answers.skincare.antifungalShampooToday;
+    const weekCountRaw = (typeof shampooWeekCount === 'number') ? shampooWeekCount : 0;
+    // adjust for today's tentative answer
+    const adjusted = weekCountRaw + (today === true ? 1 : 0);
     return (
       <div className="space-y-3">
-        {opts.map(o => (
-          <OptionButton
-            key={o.v}
-            label={o.label}
-            glyph={o.v === 0 ? '○' : `${o.v}`}
-            selected={answers.skincare.antifungalShampooThisWeek === o.v}
-            onClick={() => {
-              update('skincare.antifungalShampooThisWeek', o.v);
-              setTimeout(onAutoNext, 200);
-            }}
-          />
-        ))}
+        <OptionButton
+          label="今天没用"
+          glyph="○"
+          selected={today === false}
+          onClick={() => {
+            update('skincare.antifungalShampooToday', false);
+            setTimeout(onAutoNext, 200);
+          }}
+        />
+        <OptionButton
+          label="今天用了"
+          glyph="●"
+          selected={today === true}
+          onClick={() => {
+            update('skincare.antifungalShampooToday', true);
+            setTimeout(onAutoNext, 200);
+          }}
+        />
+        <p className="text-xs mt-2" style={{ color: COLORS.tertiary }}>
+          本周累计: {adjusted} / 2 次(目标:每周 2 次,通常周二 + 周五)
+        </p>
       </div>
     );
   }
@@ -2093,7 +2283,7 @@ function DietRow({ field, value = { had: false, detail: '' }, onChange }) {
 // PREVIEW SCREEN
 // ============================================================
 
-function RecordingPreview({ date, answers, products, productImages, onEdit, onSubmit, onCancel }) {
+function RecordingPreview({ date, answers, products, productImages, activeModules, onEditScreen, onSubmit, onExit }) {
   const dateObj = parseDate(date);
   const weekday = ['日', '一', '二', '三', '四', '五', '六'][dateObj.getDay()];
   const labelMap = {
@@ -2102,260 +2292,222 @@ function RecordingPreview({ date, answers, products, productImages, onEdit, onSu
     warm: '温', hot: '热', veryhot: '很烫',
     low: '低', mid: '中', high: '高',
   };
-  const productById = id => products.find(p => p.id === id);
+
+  const moduleSet = new Set(activeModules || MODULES.map(m => m.id));
+
+  const Row = ({ label, value, screenId }) => (
+    <button
+      onClick={() => onEditScreen(screenId)}
+      className="flex justify-between items-start w-full hover:bg-gray-50 px-2 py-2 rounded transition-colors gap-2"
+    >
+      <span className="flex-shrink-0" style={{ color: COLORS.secondary }}>{label}</span>
+      <span
+        className="text-right break-words"
+        style={{ color: value ? COLORS.primary : COLORS.tertiary }}
+      >
+        {value || '未填'}
+      </span>
+    </button>
+  );
+
+  // Diet 诱因 detail builder (with detail text)
+  const dietDetailText = (() => {
+    const parts = [];
+    const formatItem = (label, item) => item?.detail ? `${label}(${item.detail})` : label;
+    if (answers.diet?.alcohol?.had) parts.push(formatItem('酒精', answers.diet.alcohol));
+    if (answers.diet?.spicy?.had) parts.push(formatItem('辣', answers.diet.spicy));
+    if (answers.diet?.caffeine?.had) parts.push(formatItem('咖啡因', answers.diet.caffeine));
+    if (answers.diet?.highHistamine?.had) parts.push(formatItem('高组胺', answers.diet.highHistamine));
+    if (answers.diet?.otherSuspect?.had) parts.push(formatItem('其他', answers.diet.otherSuspect));
+    return parts.join(' · ') || '无';
+  })();
+
+  let sectionNum = 0;
+  const next = () => String(++sectionNum).padStart(2, '0');
 
   return (
     <div className="min-h-screen pb-32">
       <div className="px-5 pt-6 pb-4 flex items-center justify-between">
         <button
-          onClick={onCancel}
+          onClick={onExit}
           className="flex items-center gap-1 text-sm hover:opacity-70 transition-opacity"
           style={{ color: COLORS.secondary }}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="f-song-bold-narrow">继续编辑</span>
+          <span className="f-song-bold-narrow">退回</span>
         </button>
         <span className="t-label" style={{ color: COLORS.tertiary }}>[预览]</span>
       </div>
 
       <div className="px-5 mb-6">
-        <span className="t-label" style={{ color: COLORS.tertiary }}>
-          {date.replace(/-/g, ' / ')} · 周{weekday}
-        </span>
-        <h1 className="t-h1 mt-2" style={{ color: COLORS.primary }}>预览记录</h1>
+        <span className="t-label" style={{ color: COLORS.tertiary }}>{date.replace(/-/g, ' / ')} · 周{weekday}</span>
+        <h1 className="t-h1 mt-2" style={{ color: COLORS.primary }}>记录预览</h1>
         <p className="t-body mt-2" style={{ color: COLORS.secondary }}>
-          点击任一条目可回到对应问题修改。确认无误后提交。
+          点击任一栏目可直接修改。点"保存记录"提交。
         </p>
       </div>
 
       <div className="px-5 space-y-4">
         {/* Skin */}
-        <Card>
-          <div className="flex items-baseline gap-3 mb-3">
-            <span className="t-en-sm" style={{ color: COLORS.tertiary }}>01</span>
-            <h3 className="t-h3" style={{ color: COLORS.primary }}>皮肤状态</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            {[
-              ['泛红', answers.skin.redness, 0],
-              ['灼热刺痛', answers.skin.burning, 1],
-              ['痒感', answers.skin.itch, 2],
-              ['粗糙度', answers.skin.roughness, 3],
-            ].map(([label, val, step]) => (
-              <button
-                key={label}
-                onClick={() => onEdit(step)}
-                className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-              >
-                <span style={{ color: COLORS.secondary }}>{label}</span>
-                <span style={{ color: val ? COLORS.primary : COLORS.tertiary }}>
-                  {val ? labelMap[val] : '未填'}
-                </span>
-              </button>
-            ))}
-            <button
-              onClick={() => onEdit(4)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>新出丘疹</span>
-              <span style={{ color: COLORS.primary }}>
-                {answers.skin.newPapules === undefined ? '未填' :
-                  answers.skin.newPapules ?
-                    `有 ${answers.skin.papuleAreas?.length > 0 ? '· ' + answers.skin.papuleAreas.join('/') : ''}` :
-                    '无'}
-              </span>
-            </button>
-            <button
-              onClick={() => onEdit(5)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>照片</span>
-              <span style={{ color: COLORS.primary }}>
-                {(answers.skin.photos || []).length} 张
-              </span>
-            </button>
-          </div>
-        </Card>
+        {moduleSet.has('skin') && (
+          <Card>
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{next()}</span>
+              <h3 className="t-h3" style={{ color: COLORS.primary }}>皮肤状态</h3>
+            </div>
+            <div className="space-y-1 text-sm">
+              <Row label="泛红" value={answers.skin?.redness ? labelMap[answers.skin.redness] : null} screenId="redness" />
+              <Row label="灼热刺痛" value={answers.skin?.burning ? labelMap[answers.skin.burning] : null} screenId="burning" />
+              <Row label="痒感" value={answers.skin?.itch ? labelMap[answers.skin.itch] : null} screenId="itch" />
+              <Row label="粗糙度" value={answers.skin?.roughness ? labelMap[answers.skin.roughness] : null} screenId="roughness" />
+              <Row label="新出丘疹" value={
+                answers.skin?.newPapules === undefined ? null :
+                  answers.skin.newPapules
+                    ? `有${answers.skin.papuleAreas?.length > 0 ? ' · ' + answers.skin.papuleAreas.join('/') : ''}`
+                    : '无'
+              } screenId="papules" />
+              <Row label="照片" value={(answers.skin?.photos || []).length > 0 ? `${answers.skin.photos.length} 张` : '无'} screenId="photos" />
+            </div>
+          </Card>
+        )}
 
-        {/* Skincare */}
-        <Card>
-          <div className="flex items-baseline gap-3 mb-3">
-            <span className="t-en-sm" style={{ color: COLORS.tertiary }}>02</span>
-            <h3 className="t-h3" style={{ color: COLORS.primary }}>用药与护肤</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            <button
-              onClick={() => onEdit(6)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>早间</span>
-              <span style={{ color: COLORS.primary }}>
-                {[
-                  answers.skincare.morning?.finacea && 'Finacea',
-                  answers.skincare.morning?.cleanserId && '洁',
-                  answers.skincare.morning?.moisturizerId && '保湿',
-                  answers.skincare.morning?.sunscreenId && '防晒',
-                ].filter(Boolean).join(' · ') || '未填'}
-              </span>
-            </button>
-            <button
-              onClick={() => onEdit(7)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>晚间</span>
-              <span style={{ color: COLORS.primary }}>
-                {[
-                  answers.skincare.evening?.finacea && 'Finacea',
-                  answers.skincare.evening?.cleanserId && '洁',
-                  answers.skincare.evening?.moisturizerId && '保湿',
-                ].filter(Boolean).join(' · ') || '未填'}
-              </span>
-            </button>
-            <button
-              onClick={() => onEdit(8)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>抗真菌洗发水</span>
-              <span style={{ color: COLORS.primary }}>
-                {answers.skincare.antifungalShampooThisWeek === undefined ? '未填' :
-                  answers.skincare.antifungalShampooThisWeek === 0 ? '未用' :
-                    `本周第 ${answers.skincare.antifungalShampooThisWeek} 次`}
-              </span>
-            </button>
-          </div>
-        </Card>
+        {/* Skincare (morning + evening + shampoo combined card) */}
+        {(moduleSet.has('morning') || moduleSet.has('evening')) && (
+          <Card>
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{next()}</span>
+              <h3 className="t-h3" style={{ color: COLORS.primary }}>用药与护肤</h3>
+            </div>
+            <div className="space-y-1 text-sm">
+              {moduleSet.has('morning') && (
+                <Row label="早间" value={
+                  [
+                    answers.skincare?.morning?.finacea && 'Finacea',
+                    answers.skincare?.morning?.cleanserId && '洁',
+                    answers.skincare?.morning?.moisturizerId && '保湿',
+                    answers.skincare?.morning?.sunscreenId && '防晒',
+                  ].filter(Boolean).join(' · ') || null
+                } screenId="skincare-morning" />
+              )}
+              {moduleSet.has('evening') && (
+                <>
+                  <Row label="晚间" value={
+                    [
+                      answers.skincare?.evening?.finacea && 'Finacea',
+                      answers.skincare?.evening?.cleanserId && '洁',
+                      answers.skincare?.evening?.moisturizerId && '保湿',
+                    ].filter(Boolean).join(' · ') || null
+                  } screenId="skincare-evening" />
+                  <Row label="抗真菌洗发水" value={
+                    answers.skincare?.antifungalShampooToday === undefined ? null :
+                      answers.skincare.antifungalShampooToday ? '今天用了' : '今天没用'
+                  } screenId="shampoo" />
+                </>
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Diet */}
-        <Card>
-          <div className="flex items-baseline gap-3 mb-3">
-            <span className="t-en-sm" style={{ color: COLORS.tertiary }}>03</span>
-            <h3 className="t-h3" style={{ color: COLORS.primary }}>饮食</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            <button
-              onClick={() => onEdit(9)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>诱因食物</span>
-              <span style={{ color: COLORS.primary }}>
-                {[
-                  answers.diet.alcohol?.had && '酒精',
-                  answers.diet.spicy?.had && '辣',
-                  answers.diet.caffeine?.had && '咖啡因',
-                  answers.diet.highHistamine?.had && '高组胺',
-                  answers.diet.otherSuspect?.had && '其他',
-                ].filter(Boolean).join(' · ') || '无'}
-              </span>
-            </button>
-            <button
-              onClick={() => onEdit(10)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>热饮</span>
-              <span style={{ color: COLORS.primary }}>
-                {!answers.diet.hotDrinks?.cups ? '无' :
-                  `${answers.diet.hotDrinks.cups} 杯 · ${labelMap[answers.diet.hotDrinks.temp] || '温'}`}
-              </span>
-            </button>
-            <button
-              onClick={() => onEdit(11)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>营养补剂</span>
-              <span style={{ color: COLORS.primary }}>
-                {(answers.diet.supplementIds || []).length === 0 ? '无' :
-                  `${answers.diet.supplementIds.length} 种`}
-              </span>
-            </button>
-          </div>
-        </Card>
+        {moduleSet.has('diet') && (
+          <Card>
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{next()}</span>
+              <h3 className="t-h3" style={{ color: COLORS.primary }}>饮食</h3>
+            </div>
+            <div className="space-y-1 text-sm">
+              <Row label="诱因食物" value={dietDetailText} screenId="diet-1" />
+              <Row label="热饮" value={
+                !answers.diet?.hotDrinks?.cups ? '无' :
+                  `${answers.diet.hotDrinks.cups} 杯 · ${labelMap[answers.diet.hotDrinks.temp] || '温'}`
+              } screenId="hotdrinks" />
+              <Row label="营养补剂" value={
+                (answers.diet?.supplementIds || []).length === 0 ? '无' :
+                  `${answers.diet.supplementIds.length} 种`
+              } screenId="supplements" />
+            </div>
+          </Card>
+        )}
 
         {/* Environment */}
-        <Card>
-          <div className="flex items-baseline gap-3 mb-3">
-            <span className="t-en-sm" style={{ color: COLORS.tertiary }}>04</span>
-            <h3 className="t-h3" style={{ color: COLORS.primary }}>环境</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            <button
-              onClick={() => onEdit(12)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>户外温度</span>
-              <span style={{ color: COLORS.primary }}>
-                {answers.environment.outdoorTempC === null || answers.environment.outdoorTempC === undefined ?
-                  '未填' : `${answers.environment.outdoorTempC}℃`}
-              </span>
-            </button>
-            <button
-              onClick={() => onEdit(13)}
-              className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            >
-              <span style={{ color: COLORS.secondary }}>其他环境</span>
-              <span style={{ color: COLORS.primary }}>
-                {[
-                  answers.environment.indoorHVAC && '空调',
-                  answers.environment.tempSwing && '温差',
-                  answers.environment.wind && '风',
-                  answers.environment.dryEnv && '干燥',
-                  answers.environment.sunDirectMin > 0 && `阳光 ${answers.environment.sunDirectMin}min`,
-                ].filter(Boolean).join(' · ') || '无'}
-              </span>
-            </button>
-          </div>
-        </Card>
+        {moduleSet.has('env') && (
+          <Card>
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{next()}</span>
+              <h3 className="t-h3" style={{ color: COLORS.primary }}>环境</h3>
+            </div>
+            <div className="space-y-1 text-sm">
+              <Row label="户外温度" value={
+                answers.environment?.outdoorTempC === null || answers.environment?.outdoorTempC === undefined || answers.environment?.outdoorTempC === '' ?
+                  null : `${answers.environment.outdoorTempC}℃`
+              } screenId="outdoor-temp" />
+              <Row label="其他环境" value={
+                [
+                  answers.environment?.indoorHVAC && '空调',
+                  answers.environment?.tempSwing && '温差',
+                  answers.environment?.wind && '风',
+                  answers.environment?.dryEnv && '干燥',
+                  answers.environment?.sunDirectMin > 0 && `阳光 ${answers.environment.sunDirectMin}min`,
+                ].filter(Boolean).join(' · ') || '无'
+              } screenId="environment" />
+            </div>
+          </Card>
+        )}
 
         {/* Physical */}
-        <Card>
-          <div className="flex items-baseline gap-3 mb-3">
-            <span className="t-en-sm" style={{ color: COLORS.tertiary }}>05</span>
-            <h3 className="t-h3" style={{ color: COLORS.primary }}>生理与生活</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            {[
-              ['出汗', answers.physical.sweating ? labelMap[answers.physical.sweating] : '未填', 14],
-              ['热水', [answers.physical.hotShower && '澡', answers.physical.hotFaceWash && '洗脸'].filter(Boolean).join(' · ') || '无', 15],
-              ['运动', answers.physical.exercise?.had ? `${answers.physical.exercise.type}(${labelMap[answers.physical.exercise.intensity] || '?'})` : '无', 16],
-              ['上床时间', answers.physical.bedtime || '未填', 17],
-              ['压力', answers.physical.stress?.had ? '有' : '还行', 18],
-              ['月经', answers.physical.period?.active ? `第 ${answers.physical.period.dayN || '?'} 天` : '不在期', 19],
-              ['新纺织品', answers.physical.newTextile ? '是' : '否', 20],
-            ].map(([label, val, step]) => (
-              <button
-                key={label}
-                onClick={() => onEdit(step)}
-                className="flex justify-between w-full hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-              >
-                <span style={{ color: COLORS.secondary }}>{label}</span>
-                <span style={{ color: COLORS.primary }} className="truncate ml-2 max-w-[200px]">{val}</span>
-              </button>
-            ))}
-          </div>
-        </Card>
+        {moduleSet.has('phys') && (
+          <Card>
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{next()}</span>
+              <h3 className="t-h3" style={{ color: COLORS.primary }}>生理与生活</h3>
+            </div>
+            <div className="space-y-1 text-sm">
+              <Row label="出汗" value={answers.physical?.sweating ? labelMap[answers.physical.sweating] : null} screenId="sweating" />
+              <Row label="热水" value={
+                [answers.physical?.hotShower && '澡', answers.physical?.hotFaceWash && '洗脸'].filter(Boolean).join(' · ') || '无'
+              } screenId="hotwater" />
+              <Row label="运动" value={
+                answers.physical?.exercise?.had ? `${answers.physical.exercise.type}(${labelMap[answers.physical.exercise.intensity] || '?'})` : '无'
+              } screenId="exercise" />
+              <Row label="上床时间" value={answers.physical?.bedtime || null} screenId="bedtime" />
+              <Row label="压力" value={
+                answers.physical?.stress?.had
+                  ? (answers.physical.stress.detail ? `有 · ${answers.physical.stress.detail}` : '有')
+                  : '还行'
+              } screenId="stress" />
+              <Row label="月经" value={
+                answers.physical?.period?.active ? `第 ${answers.physical.period.dayN || '?'} 天` : '不在期'
+              } screenId="period" />
+              <Row label="新纺织品" value={
+                answers.physical?.newTextile === undefined ? null : (answers.physical.newTextile ? '是' : '否')
+              } screenId="textile" />
+            </div>
+          </Card>
+        )}
 
         {/* Notes */}
-        <Card>
-          <div className="flex items-baseline gap-3 mb-3">
-            <span className="t-en-sm" style={{ color: COLORS.tertiary }}>06</span>
-            <h3 className="t-h3" style={{ color: COLORS.primary }}>备注</h3>
-          </div>
-          <button
-            onClick={() => onEdit(21)}
-            className="text-left w-full text-sm hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-            style={{ color: answers.notes ? COLORS.primary : COLORS.tertiary }}
-          >
-            {answers.notes || '(无备注)'}
-          </button>
-        </Card>
+        {moduleSet.has('notes') && (
+          <Card>
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="t-en-sm" style={{ color: COLORS.tertiary }}>{next()}</span>
+              <h3 className="t-h3" style={{ color: COLORS.primary }}>备注</h3>
+            </div>
+            <button
+              onClick={() => onEditScreen('notes')}
+              className="text-left w-full text-sm hover:bg-gray-50 px-2 py-2 rounded transition-colors"
+              style={{ color: answers.notes ? COLORS.primary : COLORS.tertiary }}
+            >
+              {answers.notes || '(无备注)'}
+            </button>
+          </Card>
+        )}
       </div>
 
       <div
         className="fixed bottom-0 left-0 right-0 px-5 py-4"
-          style={{ backgroundColor: '#EFE5D5' }}
+        style={{ backgroundColor: '#EFE5D5' }}
       >
-        <PrimaryButton fullWidth onClick={onSubmit} icon={Check}>
-          提交记录
-        </PrimaryButton>
+        <PrimaryButton fullWidth onClick={onSubmit} icon={Check}>保存记录</PrimaryButton>
       </div>
     </div>
   );
@@ -2368,8 +2520,8 @@ function RecordingPreview({ date, answers, products, productImages, onEdit, onSu
 function CareTab({ routine, onSaveRoutine, products, productImages, onProductsChange, onProductImageChange, useCount }) {
   const [routineEditing, setRoutineEditing] = useState(false);
   const [routineDraft, setRoutineDraft] = useState(routine);
-  const [productView, setProductView] = useState('main'); // main | edit | add
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [productView, setProductView] = useState('main'); // main | edit | add | edit-product
+  const [editingProductId, setEditingProductId] = useState(null);
 
   const renderRoutineMD = (md) => {
     // Simple markdown rendering for **bold** and lists
@@ -2396,7 +2548,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
-  if (productView === 'add' || (productView === 'edit' && editingProduct === 'new')) {
+  if (productView === 'add' || (productView === 'edit' && editingProductId === 'new')) {
     return <ProductAddPage
       onSave={async (newProducts) => {
         const updated = [...products, ...newProducts];
@@ -2404,6 +2556,27 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
         setProductView('edit');
       }}
       onCancel={() => setProductView('edit')}
+      onImageChange={onProductImageChange}
+    />;
+  }
+
+  if (productView === 'edit-product' && editingProductId) {
+    const editingProduct = products.find(p => p.id === editingProductId);
+    if (!editingProduct) {
+      // Product was deleted, fallback
+      setProductView('edit');
+      return null;
+    }
+    return <ProductEditForm
+      product={editingProduct}
+      currentImage={productImages[editingProduct.id]}
+      onSave={async (updated) => {
+        const newProducts = products.map(p => p.id === updated.id ? updated : p);
+        await onProductsChange(newProducts);
+        setEditingProductId(null);
+        setProductView('edit');
+      }}
+      onCancel={() => { setEditingProductId(null); setProductView('edit'); }}
       onImageChange={onProductImageChange}
     />;
   }
@@ -2417,6 +2590,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
       }}
       onAddNew={() => setProductView('add')}
       onBack={() => setProductView('main')}
+      onEditProduct={(id) => { setEditingProductId(id); setProductView('edit-product'); }}
     />;
   }
 
@@ -2546,7 +2720,7 @@ function CareTab({ routine, onSaveRoutine, products, productImages, onProductsCh
   );
 }
 
-function ProductEditPage({ products, productImages, onDelete, onAddNew, onBack }) {
+function ProductEditPage({ products, productImages, onDelete, onAddNew, onBack, onEditProduct }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -2585,7 +2759,7 @@ function ProductEditPage({ products, productImages, onDelete, onAddNew, onBack }
             </div>
             <div className="space-y-2">
               {filtered.map(p => (
-                <Card key={p.id}>
+                <Card key={p.id} onClick={() => onEditProduct(p.id)}>
                   <div className="flex items-center gap-3">
                     <div
                       className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0"
@@ -2603,10 +2777,11 @@ function ProductEditPage({ products, productImages, onDelete, onAddNew, onBack }
                       {p.notes && <div className="text-[10px] mt-0.5 truncate" style={{ color: COLORS.tertiary }}>{p.notes}</div>}
                     </div>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (confirm(`确认删除「${p.brand} ${p.name}」?`)) onDelete(p.id);
                       }}
-                      className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                      className="p-2 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4" style={{ color: COLORS.tertiary }} />
                     </button>
@@ -2846,6 +3021,175 @@ function ProductAddPage({ onSave, onCancel, onImageChange }) {
 }
 
 // ============================================================
+// PRODUCT EDIT FORM (single product, separate from add flow)
+// ============================================================
+
+function ProductEditForm({ product, currentImage, onSave, onCancel, onImageChange }) {
+  const [draft, setDraft] = useState({
+    id: product.id,
+    brand: product.brand,
+    customBrand: '',
+    name: product.name,
+    category: product.category,
+    notes: product.notes || '',
+    imageBase64: currentImage || null,
+  });
+  const isCustomBrand = !BRAND_PRESETS.includes(draft.brand) && draft.brand;
+
+  // Initialize: if brand isn't in preset list, treat as custom
+  useEffect(() => {
+    if (product.brand && !BRAND_PRESETS.includes(product.brand)) {
+      setDraft(d => ({ ...d, brand: '其他...', customBrand: product.brand }));
+    }
+  }, []);
+
+  const handleImage = async (file) => {
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file);
+      setDraft(d => ({ ...d, imageBase64: compressed }));
+    } catch (e) {
+      alert('图片处理失败');
+    }
+  };
+
+  const handleSave = async () => {
+    const brandFinal = draft.brand === '其他...' ? draft.customBrand.trim() : draft.brand;
+    if (!brandFinal || !draft.name.trim()) {
+      alert('品牌和产品名都是必填');
+      return;
+    }
+    const updated = {
+      id: draft.id,
+      brand: brandFinal,
+      name: draft.name.trim(),
+      category: draft.category,
+      notes: draft.notes.trim(),
+      createdAt: product.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    if (draft.imageBase64 && draft.imageBase64 !== currentImage) {
+      await onImageChange(draft.id, draft.imageBase64);
+    }
+    onSave(updated);
+  };
+
+  return (
+    <div className="space-y-5 pb-8">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onCancel}
+          className="flex items-center gap-1 text-sm hover:opacity-70"
+          style={{ color: COLORS.secondary }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="f-song-bold-narrow">取消</span>
+        </button>
+        <PrimaryButton onClick={handleSave} icon={Check}>保存修改</PrimaryButton>
+      </div>
+
+      <div>
+        <span className="t-label" style={{ color: COLORS.tertiary }}>[EDIT PRODUCT]</span>
+        <h1 className="t-h1 mt-2" style={{ color: COLORS.primary }}>编辑产品</h1>
+      </div>
+
+      <Card>
+        {/* Image */}
+        <div className="flex items-start gap-3 mb-4">
+          <label
+            className="w-20 h-20 rounded-xl flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+            style={{ backgroundColor: COLORS.subtle }}
+          >
+            {draft.imageBase64 ? (
+              <img src={draft.imageBase64} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <ImageIcon className="w-6 h-6" style={{ color: COLORS.tertiary }} />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => handleImage(e.target.files?.[0])}
+            />
+          </label>
+          <p className="text-xs flex-1 mt-1" style={{ color: COLORS.tertiary }}>
+            点击替换图片<br/>自动压缩到 200×200
+          </p>
+        </div>
+
+        {/* Brand */}
+        <div className="space-y-2 mb-3">
+          <span className="t-label" style={{ color: COLORS.tertiary }}>[品牌]</span>
+          <select
+            value={draft.brand}
+            onChange={e => setDraft(d => ({ ...d, brand: e.target.value }))}
+            style={{ backgroundColor: COLORS.subtle, color: COLORS.primary }}
+            className="w-full rounded-lg px-4 py-3 text-sm outline-none border-transparent focus:bg-white focus:ring-2 focus:ring-purple-100"
+          >
+            <option value="">选择品牌...</option>
+            {BRAND_PRESETS.map(b => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+          {draft.brand === '其他...' && (
+            <TextInput
+              value={draft.customBrand}
+              onChange={v => setDraft(d => ({ ...d, customBrand: v }))}
+              placeholder="输入品牌名"
+            />
+          )}
+        </div>
+
+        {/* Name */}
+        <div className="space-y-2 mb-3">
+          <span className="t-label" style={{ color: COLORS.tertiary }}>[产品名]</span>
+          <TextInput
+            value={draft.name}
+            onChange={v => setDraft(d => ({ ...d, name: v }))}
+            placeholder="如 Hydrating Facial Cleanser"
+          />
+        </div>
+
+        {/* Category */}
+        <div className="space-y-2 mb-3">
+          <span className="t-label" style={{ color: COLORS.tertiary }}>[分类]</span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {CATEGORIES.map(c => {
+              const Icon = c.icon;
+              const selected = draft.category === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setDraft(d => ({ ...d, category: c.id }))}
+                  style={{
+                    backgroundColor: selected ? COLORS.accentSoft : COLORS.card,
+                    color: COLORS.primary,
+                  }}
+                  className="px-3 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div className="space-y-2">
+          <span className="t-label" style={{ color: COLORS.tertiary }}>[备注]</span>
+          <TextInput
+            value={draft.notes}
+            onChange={v => setDraft(d => ({ ...d, notes: v }))}
+            placeholder="如 含烟酰胺,玫瑰痤疮慎用"
+          />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
 // EXPORT TAB
 // ============================================================
 
@@ -2928,16 +3272,26 @@ function ExportTab({ allData, onImport, showToast }) {
         <div className="flex items-baseline gap-3 mb-3">
           <span className="t-en-sm" style={{ color: COLORS.tertiary }}>02</span>
           <h2 className="t-h2" style={{ color: COLORS.primary }}>Markdown 导出</h2>
-          <span className="t-label" style={{ color: COLORS.accent }}>[PHASE 2]</span>
+          
         </div>
         <Card>
           <p className="t-body mb-4" style={{ color: COLORS.secondary }}>
             生成阅读友好的 Markdown 文件。给医生看、自己回顾、给 AI 分析都更舒服。
           </p>
           <PrimaryButton
-            onClick={() => showToast('Phase 2 即将上线')}
+            onClick={() => {
+              const md = generateMarkdown(allData);
+              const blob = new Blob([md], { type: 'text/markdown' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              const stamp = new Date().toISOString().split('T')[0];
+              a.href = url;
+              a.download = `skin-diary-${stamp}.md`;
+              a.click();
+              URL.revokeObjectURL(url);
+              showToast('已导出 Markdown');
+            }}
             icon={FileText}
-            disabled={false}
           >
             导出 Markdown
           </PrimaryButton>
@@ -2970,6 +3324,364 @@ function ExportTab({ allData, onImport, showToast }) {
     </div>
   );
 }
+
+
+// ============================================================
+// WEEKLY REVIEW FLOW
+// ============================================================
+
+function WeeklyReviewFlow({ weekKey, existingRecord, dailyRecords, onComplete, onCancel }) {
+  const [data, setData] = useState(() => {
+    if (existingRecord) return JSON.parse(JSON.stringify(existingRecord));
+    return { trend: '', mainTriggers: '', routineChange: '', toWatch: '', notes: '' };
+  });
+  const [dirty, setDirty] = useState(false);
+  const [showConfirmExit, setShowConfirmExit] = useState(false);
+
+  const update = (field, value) => {
+    setDirty(true);
+    setData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const requestExit = () => {
+    if (dirty) setShowConfirmExit(true);
+    else onCancel();
+  };
+
+  // Compute summary stats from dailyRecords for this week
+  const summaryStats = (() => {
+    const weekDates = Object.keys(dailyRecords).filter(d => {
+      try { return getWeekKey(parseDate(d)) === weekKey; } catch { return false; }
+    });
+    const recs = weekDates.map(d => dailyRecords[d]);
+    const lights = recs.map(computeSkinLight).filter(l => l !== 'neutral');
+    const counts = { sage: 0, honey: 0, rose: 0 };
+    lights.forEach(l => { counts[l] = (counts[l] || 0) + 1; });
+    let shampoo = 0;
+    recs.forEach(r => { if (r.skincare?.antifungalShampooToday === true) shampoo++; });
+    return { dayCount: weekDates.length, ...counts, shampoo };
+  })();
+
+  return (
+    <>
+      <div className="min-h-screen pb-32">
+        <div className="px-5 pt-6 pb-4 flex items-center justify-between">
+          <button
+            onClick={requestExit}
+            className="flex items-center gap-1 text-sm hover:opacity-70 transition-opacity"
+            style={{ color: COLORS.secondary }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="f-song-bold-narrow">退回</span>
+          </button>
+          <span className="t-label" style={{ color: COLORS.tertiary }}>[周记录]</span>
+        </div>
+
+        <div className="px-5 mb-6">
+          <span className="t-label" style={{ color: COLORS.tertiary }}>{weekKey}</span>
+          <h1 className="t-h1 mt-2" style={{ color: COLORS.primary }}>本周回顾</h1>
+          <p className="t-body mt-2" style={{ color: COLORS.secondary }}>
+            周日(或之后任何时候)填写本周总结。可随时来修改。
+          </p>
+        </div>
+
+        {/* Summary stats card */}
+        <div className="px-5 mb-4">
+          <Card emphasis>
+            <p className="t-label mb-3" style={{ color: COLORS.tertiary }}>[本周数据]</p>
+            <div className="grid grid-cols-2 gap-y-2 text-sm">
+              <span style={{ color: COLORS.secondary }}>已记录天数</span>
+              <span className="text-right" style={{ color: COLORS.primary }}>{summaryStats.dayCount} 天</span>
+              <span style={{ color: COLORS.secondary }}>好转 / 无变化</span>
+              <span className="text-right" style={{ color: COLORS.primary }}>{summaryStats.sage} 天</span>
+              <span style={{ color: COLORS.secondary }}>部分恶化</span>
+              <span className="text-right" style={{ color: COLORS.primary }}>{summaryStats.honey} 天</span>
+              <span style={{ color: COLORS.secondary }}>多数恶化</span>
+              <span className="text-right" style={{ color: COLORS.primary }}>{summaryStats.rose} 天</span>
+              <span style={{ color: COLORS.secondary }}>抗真菌洗发水</span>
+              <span className="text-right" style={{ color: COLORS.primary }}>{summaryStats.shampoo} / 2 次</span>
+            </div>
+          </Card>
+        </div>
+
+        <div className="px-5 space-y-4">
+          {/* Trend */}
+          <Card>
+            <p className="t-label mb-3 block" style={{ color: COLORS.tertiary }}>[01 整体趋势]</p>
+            <p className="t-body mb-3" style={{ color: COLORS.secondary }}>对比上周,本周整体如何?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { v: 'better', l: '好转', glyph: '↑' },
+                { v: 'same', l: '无变化', glyph: '→' },
+                { v: 'fluctuate', l: '反复', glyph: '↔' },
+                { v: 'worse', l: '恶化', glyph: '↓' },
+              ].map(o => (
+                <OptionButton
+                  key={o.v}
+                  label={o.l}
+                  glyph={o.glyph}
+                  selected={data.trend === o.v}
+                  onClick={() => update('trend', o.v)}
+                />
+              ))}
+            </div>
+          </Card>
+
+          {/* Main triggers */}
+          <Card>
+            <p className="t-label mb-2 block" style={{ color: COLORS.tertiary }}>[02 主要诱因]</p>
+            <p className="t-body mb-3" style={{ color: COLORS.secondary }}>
+              这周观察到哪些诱因明显诱发反应?(自由填写)
+            </p>
+            <TextArea
+              value={data.mainTriggers}
+              onChange={v => update('mainTriggers', v)}
+              placeholder="例:周二喝了红酒后第二天泛红明显加重;咖啡因似乎影响不大..."
+              rows={3}
+            />
+          </Card>
+
+          {/* Routine adjustments */}
+          <Card>
+            <p className="t-label mb-2 block" style={{ color: COLORS.tertiary }}>[03 Routine 调整]</p>
+            <p className="t-body mb-3" style={{ color: COLORS.secondary }}>
+              下周打算调整什么?(产品、剂量、避免某种食物等)
+            </p>
+            <TextArea
+              value={data.routineChange}
+              onChange={v => update('routineChange', v)}
+              placeholder="例:Finacea 改成只晚上用一次;戒酒精一周观察..."
+              rows={3}
+            />
+          </Card>
+
+          {/* To watch */}
+          <Card>
+            <p className="t-label mb-2 block" style={{ color: COLORS.tertiary }}>[04 待观察]</p>
+            <p className="t-body mb-3" style={{ color: COLORS.secondary }}>
+              下周需要重点观察的现象 / 假设。
+            </p>
+            <TextArea
+              value={data.toWatch}
+              onChange={v => update('toWatch', v)}
+              placeholder="例:验证咖啡因到底影不影响;观察新枕套和痒感..."
+              rows={3}
+            />
+          </Card>
+
+          {/* Notes */}
+          <Card>
+            <p className="t-label mb-2 block" style={{ color: COLORS.tertiary }}>[05 备注]</p>
+            <TextArea
+              value={data.notes}
+              onChange={v => update('notes', v)}
+              placeholder="其他观察、给未来自己的话..."
+              rows={3}
+            />
+          </Card>
+        </div>
+
+        <div
+          className="fixed bottom-0 left-0 right-0 px-5 py-4"
+          style={{ backgroundColor: '#EFE5D5' }}
+        >
+          <PrimaryButton fullWidth onClick={() => onComplete(data)} icon={Check}>
+            保存周记录
+          </PrimaryButton>
+        </div>
+      </div>
+      {showConfirmExit && <ConfirmExitModal onConfirm={() => { setShowConfirmExit(false); onCancel(); }} onCancel={() => setShowConfirmExit(false)} />}
+    </>
+  );
+}
+
+// ============================================================
+// MARKDOWN EXPORT
+// ============================================================
+
+function generateMarkdown(allData) {
+  const { routine, products, dailyRecords, weeklyRecords } = allData;
+  const lines = [];
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const stamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  lines.push('# 皮肤诱因日记');
+  lines.push('');
+  lines.push(`> 导出时间:${stamp}`);
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  // Current routine
+  lines.push('## 当前 Routine');
+  lines.push('');
+  if (routine?.rawMarkdown) {
+    lines.push(routine.rawMarkdown);
+  } else {
+    lines.push('_(未填写)_');
+  }
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  // Product library
+  lines.push(`## 产品库 (${(products || []).length} 个)`);
+  lines.push('');
+  const productById = {};
+  (products || []).forEach(p => { productById[p.id] = p; });
+  if ((products || []).length === 0) {
+    lines.push('_(空)_');
+  } else {
+    const cats = ['cleanser', 'moisturizer', 'sunscreen', 'shampoo', 'supplement', 'other'];
+    const catLabels = { cleanser: '洁面', moisturizer: '保湿', sunscreen: '防晒', shampoo: '洗发水', supplement: '营养补剂', other: '其他' };
+    cats.forEach(cat => {
+      const inCat = (products || []).filter(p => p.category === cat);
+      if (inCat.length === 0) return;
+      lines.push(`### ${catLabels[cat]}`);
+      lines.push('');
+      inCat.forEach(p => {
+        const note = p.notes ? ` — ${p.notes}` : '';
+        lines.push(`- **${p.brand}** ${p.name}${note}`);
+      });
+      lines.push('');
+    });
+  }
+  lines.push('---');
+  lines.push('');
+
+  // Daily records (chronological)
+  const dailyDates = Object.keys(dailyRecords || {}).sort();
+  lines.push(`## 日记录 (${dailyDates.length} 天)`);
+  lines.push('');
+
+  const labelMap = {
+    better: '好转', same: '无变化', worse: '恶化',
+    none: '没出汗', light: '轻微', medium: '中等', heavy: '大量',
+    warm: '温', hot: '热', veryhot: '很烫',
+    low: '低', mid: '中', high: '高',
+  };
+  const productName = id => {
+    const p = productById[id];
+    return p ? `${p.brand} ${p.name}` : '?';
+  };
+
+  dailyDates.forEach(date => {
+    const r = dailyRecords[date];
+    const dateObj = parseDate(date);
+    const wd = ['日', '一', '二', '三', '四', '五', '六'][dateObj.getDay()];
+    lines.push(`### ${date} 周${wd}`);
+    lines.push('');
+
+    // Skin
+    const skin = r.skin || {};
+    const skinFields = [
+      skin.redness && `泛红 ${labelMap[skin.redness]}`,
+      skin.burning && `灼热 ${labelMap[skin.burning]}`,
+      skin.itch && `痒 ${labelMap[skin.itch]}`,
+      skin.roughness && `粗糙 ${labelMap[skin.roughness]}`,
+    ].filter(Boolean);
+    if (skinFields.length) lines.push(`- **皮肤状态**:${skinFields.join(' · ')}`);
+    if (skin.newPapules) {
+      const areas = skin.papuleAreas?.length > 0 ? `(${skin.papuleAreas.join('/')})` : '';
+      lines.push(`- **新出丘疹**:有${areas}`);
+    }
+    if ((skin.photos || []).length > 0) {
+      lines.push(`- **照片**:${skin.photos.join(', ')}`);
+    }
+
+    // Skincare
+    const morning = r.skincare?.morning || {};
+    const morningParts = [
+      morning.finacea && 'Finacea',
+      morning.cleanserId && `洁:${productName(morning.cleanserId)}`,
+      morning.moisturizerId && `保湿:${productName(morning.moisturizerId)}`,
+      morning.sunscreenId && `防晒:${productName(morning.sunscreenId)}`,
+    ].filter(Boolean);
+    if (morningParts.length) lines.push(`- **早间**:${morningParts.join(' · ')}`);
+    const evening = r.skincare?.evening || {};
+    const eveningParts = [
+      evening.finacea && 'Finacea',
+      evening.cleanserId && `洁:${productName(evening.cleanserId)}`,
+      evening.moisturizerId && `保湿:${productName(evening.moisturizerId)}`,
+    ].filter(Boolean);
+    if (eveningParts.length) lines.push(`- **晚间**:${eveningParts.join(' · ')}`);
+    if (r.skincare?.antifungalShampooToday === true) {
+      lines.push(`- **抗真菌洗发水**:今天用了`);
+    }
+
+    // Diet
+    const diet = r.diet || {};
+    const dietParts = [];
+    const formatItem = (label, item) => item?.detail ? `${label}(${item.detail})` : label;
+    if (diet.alcohol?.had) dietParts.push(formatItem('酒精', diet.alcohol));
+    if (diet.spicy?.had) dietParts.push(formatItem('辣', diet.spicy));
+    if (diet.caffeine?.had) dietParts.push(formatItem('咖啡因', diet.caffeine));
+    if (diet.highHistamine?.had) dietParts.push(formatItem('高组胺', diet.highHistamine));
+    if (diet.otherSuspect?.had) dietParts.push(formatItem('其他', diet.otherSuspect));
+    if (dietParts.length) lines.push(`- **诱因食物**:${dietParts.join(' · ')}`);
+    if (diet.hotDrinks?.cups) {
+      lines.push(`- **热饮**:${diet.hotDrinks.cups} 杯 · ${labelMap[diet.hotDrinks.temp] || '温'}`);
+    }
+    if ((diet.supplementIds || []).length > 0) {
+      lines.push(`- **营养补剂**:${diet.supplementIds.map(productName).join(', ')}`);
+    }
+
+    // Environment
+    const env = r.environment || {};
+    if (env.outdoorTempC !== undefined && env.outdoorTempC !== null && env.outdoorTempC !== '') {
+      lines.push(`- **户外温度**:${env.outdoorTempC}℃`);
+    }
+    const envParts = [
+      env.indoorHVAC && '空调',
+      env.tempSwing && '温差',
+      env.wind && '风',
+      env.dryEnv && '干燥',
+      env.sunDirectMin > 0 && `阳光 ${env.sunDirectMin}min`,
+    ].filter(Boolean);
+    if (envParts.length) lines.push(`- **环境**:${envParts.join(' · ')}`);
+
+    // Physical
+    const phys = r.physical || {};
+    if (phys.sweating) lines.push(`- **出汗**:${labelMap[phys.sweating]}`);
+    const hwParts = [phys.hotShower && '热水澡', phys.hotFaceWash && '热水洗脸'].filter(Boolean);
+    if (hwParts.length) lines.push(`- **热水**:${hwParts.join(' · ')}`);
+    if (phys.exercise?.had) lines.push(`- **运动**:${phys.exercise.type}(${labelMap[phys.exercise.intensity] || '?'})`);
+    if (phys.bedtime) lines.push(`- **上床时间**:${phys.bedtime}`);
+    if (phys.stress?.had) lines.push(`- **压力**:${phys.stress.detail || '有'}`);
+    if (phys.period?.active) lines.push(`- **月经**:第 ${phys.period.dayN || '?'} 天`);
+    if (phys.newTextile) lines.push(`- **新纺织品**:是`);
+
+    // Notes
+    if (r.notes) lines.push(`- **备注**:${r.notes}`);
+
+    lines.push('');
+  });
+
+  // Weekly records
+  const weekKeys = Object.keys(weeklyRecords || {}).sort();
+  if (weekKeys.length > 0) {
+    lines.push('---');
+    lines.push('');
+    lines.push(`## 周记录 (${weekKeys.length} 周)`);
+    lines.push('');
+    const trendLabel = { better: '好转', same: '无变化', fluctuate: '反复', worse: '恶化' };
+    weekKeys.forEach(wk => {
+      const w = weeklyRecords[wk];
+      lines.push(`### ${wk}`);
+      lines.push('');
+      if (w.trend) lines.push(`- **整体趋势**:${trendLabel[w.trend] || w.trend}`);
+      if (w.mainTriggers) lines.push(`- **主要诱因**:${w.mainTriggers}`);
+      if (w.routineChange) lines.push(`- **Routine 调整**:${w.routineChange}`);
+      if (w.toWatch) lines.push(`- **待观察**:${w.toWatch}`);
+      if (w.notes) lines.push(`- **备注**:${w.notes}`);
+      lines.push('');
+    });
+  }
+
+  return lines.join('\n');
+}
+
 
 // ============================================================
 // MAIN APP
@@ -3143,11 +3855,38 @@ function App() {
 
   const startRecording = (date) => {
     const existing = dailyRecords[date];
-    setView({ name: 'recording', date, existingAnswers: existing });
+    setView({ name: 'recording', date, existingRecord: existing });
   };
 
   const handleRecordingComplete = async (answers) => {
-    await saveDailyRecord(view.date, answers);
+    // Merge with existing record: when a user records only some modules,
+    // unchanged modules from existing record are preserved. The RecordingFlow
+    // already deep-clones existingRecord into answers when editing, so this
+    // mainly protects partial-module recordings on a date that already had data.
+    const existing = dailyRecords[view.date];
+    let final = answers;
+    if (existing) {
+      final = {
+        skin: { ...(existing.skin || {}), ...(answers.skin || {}) },
+        skincare: {
+          morning: { ...(existing.skincare?.morning || {}), ...(answers.skincare?.morning || {}) },
+          evening: { ...(existing.skincare?.evening || {}), ...(answers.skincare?.evening || {}) },
+          antifungalShampooToday: answers.skincare?.antifungalShampooToday !== undefined
+            ? answers.skincare.antifungalShampooToday
+            : existing.skincare?.antifungalShampooToday,
+        },
+        diet: {
+          ...(existing.diet || {}),
+          ...(answers.diet || {}),
+          hotDrinks: answers.diet?.hotDrinks ?? existing.diet?.hotDrinks,
+          supplementIds: answers.diet?.supplementIds ?? existing.diet?.supplementIds,
+        },
+        environment: { ...(existing.environment || {}), ...(answers.environment || {}) },
+        physical: { ...(existing.physical || {}), ...(answers.physical || {}) },
+        notes: answers.notes !== undefined && answers.notes !== '' ? answers.notes : (existing.notes || ''),
+      };
+    }
+    await saveDailyRecord(view.date, final);
     setView({ name: 'main' });
     setTab('calendar');
   };
@@ -3172,6 +3911,36 @@ function App() {
     );
   }
 
+  // Weekly review takes over the whole screen
+  if (view.name === 'weekly-review') {
+    return (
+      <div
+        style={{
+          backgroundColor: COLORS.canvas,
+          color: COLORS.primary,
+          minHeight: '100vh',
+        }}
+      >
+        <style>{STYLE_BLOCK}</style>
+        <WeeklyReviewFlow
+          weekKey={view.weekKey}
+          existingRecord={weeklyRecords[view.weekKey]}
+          dailyRecords={dailyRecords}
+          onComplete={async (data) => {
+            const newWeekly = { ...weeklyRecords, [view.weekKey]: data };
+            setWeeklyRecords(newWeekly);
+            await storage.set(`weekly:${view.weekKey}`, data);
+            showToast('已保存本周记录');
+            setView({ name: 'main' });
+            setTab('calendar');
+          }}
+          onCancel={() => setView({ name: 'main' })}
+        />
+        <Toast message={toast.message} show={toast.show} />
+      </div>
+    );
+  }
+
   // Recording flow takes over the whole screen
   if (view.name === 'recording') {
     return (
@@ -3185,9 +3954,10 @@ function App() {
         <style>{STYLE_BLOCK}</style>
         <RecordingFlow
           date={view.date}
-          existingAnswers={view.existingAnswers}
+          existingRecord={view.existingRecord}
           products={products}
           productImages={productImages}
+          dailyRecords={dailyRecords}
           onComplete={handleRecordingComplete}
           onCancel={() => setView({ name: 'main' })}
         />
@@ -3216,6 +3986,30 @@ function App() {
               <h1 className="t-h1 mt-2" style={{ color: COLORS.primary }}>日历概览</h1>
             </div>
 
+            {/* Shampoo reminder banner: shows on Tue (2) or Fri (5) if today not done */}
+            {(() => {
+              const todayDow = new Date().getDay();
+              const isShampooDay = todayDow === 2 || todayDow === 5;
+              const todayRec = dailyRecords[todayDate];
+              const doneToday = todayRec?.skincare?.antifungalShampooToday === true;
+              if (!isShampooDay || doneToday) return null;
+              return (
+                <Card emphasis>
+                  <div className="flex items-start gap-3">
+                    <Droplet className="w-5 h-5 mt-0.5" style={{ color: COLORS.accent }} />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium f-hei" style={{ color: COLORS.primary }}>
+                        今天该用酮康唑洗发水了
+                      </p>
+                      <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>
+                        每周建议用 2 次,通常周二 + 周五。完成后在今日记录里勾选。
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })()}
+
             <MonthCalendar
               year={calendarYear}
               month={calendarMonth}
@@ -3231,11 +4025,13 @@ function App() {
               </PrimaryButton>
               <OutlineButton
                 fullWidth
-                onClick={() => showToast('Phase 2 即将上线')}
+                onClick={() => {
+                  const wk = getWeekKey(new Date());
+                  setView({ name: 'weekly-review', weekKey: wk });
+                }}
                 icon={FileText}
-                disabled={!isSunday}
               >
-                记录本周 {!isSunday && '· 周日开放'} <span className="t-label ml-1" style={{ color: COLORS.accent }}>[PHASE 2]</span>
+                {weeklyRecords[getWeekKey(new Date())] ? '修改本周记录' : '记录本周'}
               </OutlineButton>
             </div>
 
